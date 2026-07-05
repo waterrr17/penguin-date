@@ -16,10 +16,15 @@ create table public.matchmakers (
 create table public.profiles (
   id uuid primary key default gen_random_uuid(),
   name text not null,
-  birth_year integer not null check (birth_year between 1950 and 2010),
+  birth_year integer not null check (birth_year between 1900 and 2100),
   gender text not null check (gender in ('male', 'female')),
-  height integer check (height between 140 and 220),
+  height integer check (height between 100 and 250),
   job text not null default '',
+  mbti text not null default '',
+  residence text not null default '',
+  drinking text not null default '',   -- 좋아해요 | 보통 | 싫어해요
+  smoking text not null default '',    -- 흡연자 | 비흡연자
+  religion text not null default '',   -- 개신교 | 가톨릭 | 불교 | 그 외 종교 | 무교
   -- 주선자 1 : 프로필 N
   matchmaker_id uuid references public.matchmakers (id),
   relationship text not null default '',

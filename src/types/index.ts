@@ -12,6 +12,11 @@ export interface Profile {
   gender: 'male' | 'female';
   height: number | null;
   job: string;
+  mbti: string;
+  residence: string;
+  drinking: string; // 좋아해요 | 보통 | 싫어해요
+  smoking: string; // 흡연자 | 비흡연자
+  religion: string; // 개신교 | 가톨릭 | 불교 | 그 외 종교 | 무교
   matchmakerId: string | null;
   matchmakerName: string; // matchmakers 테이블 조인 결과
   relationship: string;

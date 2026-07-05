@@ -7,7 +7,12 @@ const config: Config = {
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ['var(--font-noto-sans-kr)', 'sans-serif'],
+        display: ['var(--font-do-hyeon)', 'sans-serif'],
+      },
+    },
   },
   plugins: [],
 }

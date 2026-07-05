@@ -19,16 +19,14 @@ export default function HomePage() {
         </div>
 
         {/* 서비스명 */}
-        <h1
-          className="text-5xl font-bold text-slate-800 tracking-tight"
-          style={{ fontFamily: "'Gaegu', cursive" }}
-        >
+        <h1 className="font-display text-3xl text-slate-800 tracking-tight text-center">
           펭귄팅
         </h1>
 
         {/* 설명 */}
-        <p className="text-slate-500 text-base text-center leading-relaxed">
-          친구들이 소개해주는 소개팅 서비스
+        <p className="text-slate-400 text-sm text-center leading-relaxed">
+          한 번의 프로필 등록으로 <br />
+          연애 성공할 때까지
         </p>
 
         {/* 작은 구분선 */}
@@ -49,7 +47,7 @@ export default function HomePage() {
         >
           <span className="text-4xl">✏️</span>
           <span className="text-base font-semibold tracking-wide">프로필 등록하기</span>
-          <span className="text-xs text-sky-100">친구를 소개해 주세요</span>
+          <span className="text-xs text-sky-100">이상형을 알려주세요</span>
         </Link>
 
         {/* 구분선 */}
@@ -62,7 +60,7 @@ export default function HomePage() {
         >
           <span className="text-4xl">💌</span>
           <span className="text-base font-semibold tracking-wide">프로필 둘러보기</span>
-          <span className="text-xs text-rose-100">어떤 펭귄이 있을까요?</span>
+          <span className="text-xs text-rose-100">내 이상형 찾아보기</span>
         </Link>
 
       </div>

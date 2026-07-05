@@ -1,5 +1,19 @@
 import type { Metadata } from 'next'
+import { Do_Hyeon, Noto_Sans_KR } from 'next/font/google'
 import '../styles/globals.css'
+
+// 본문 폰트
+const notoSansKr = Noto_Sans_KR({
+  subsets: ['latin'],
+  variable: '--font-noto-sans-kr',
+})
+
+// 제목 폰트
+const doHyeon = Do_Hyeon({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-do-hyeon',
+})
 
 export const metadata: Metadata = {
   title: '펭귄팅',
@@ -12,8 +26,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="ko">
-      <body>{children}</body>
+    <html lang="ko" className={`${notoSansKr.variable} ${doHyeon.variable}`}>
+      <body className="font-sans">{children}</body>
     </html>
   )
 }

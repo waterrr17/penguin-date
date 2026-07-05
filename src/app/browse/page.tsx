@@ -80,10 +80,7 @@ export default function BrowsePage() {
         >
           ←
         </Link>
-        <h1
-          className="text-xl font-bold text-slate-800"
-          style={{ fontFamily: "'Gaegu', cursive" }}
-        >
+        <h1 className="font-display text-xl text-slate-800">
           프로필 둘러보기 💌
         </h1>
       </header>
@@ -137,7 +134,7 @@ export default function BrowsePage() {
         {/* 인원 수 */}
         <p className="text-xs text-slate-400 px-1">
           {!loading && filtered.length > 0
-            ? `${filtered.length}마리의 펭귄이 기다리고 있어요 🐧`
+            ? `${filtered.length}명의 외로운 영혼이 기다리고 있어요 🐧`
             : ''}
         </p>
 

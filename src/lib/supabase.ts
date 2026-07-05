@@ -16,6 +16,11 @@ interface ProfileRow {
   gender: 'male' | 'female'
   height: number | null
   job: string
+  mbti: string
+  residence: string
+  drinking: string
+  smoking: string
+  religion: string
   matchmaker_id: string | null
   relationship: string
   bio: string
@@ -31,6 +36,11 @@ const toProfile = (row: ProfileRow): Profile => ({
   gender: row.gender,
   height: row.height,
   job: row.job,
+  mbti: row.mbti,
+  residence: row.residence,
+  drinking: row.drinking,
+  smoking: row.smoking,
+  religion: row.religion,
   matchmakerId: row.matchmaker_id,
   matchmakerName: row.matchmakers?.name ?? '',
   relationship: row.relationship,
@@ -50,6 +60,20 @@ export async function fetchProfiles(): Promise<Profile[] | null> {
 
   if (error) throw new Error(`프로필 조회 실패: ${error.message}`)
   return (data as unknown as ProfileRow[]).map(toProfile)
+}
+
+// 단일 프로필 조회 (주선자 이름 포함). DB 미설정이거나 없는 id면 null 반환
+export async function fetchProfileById(id: string): Promise<Profile | null> {
+  if (!supabase) return null
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*, matchmakers(name)')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (error) throw new Error(`프로필 조회 실패: ${error.message}`)
+  return data ? toProfile(data as unknown as ProfileRow) : null
 }
 
 // 주선자 목록 조회 (이름순). DB 미설정 시 null 반환
@@ -77,6 +101,11 @@ export async function insertProfile(
     gender: profile.gender,
     height: profile.height,
     job: profile.job,
+    mbti: profile.mbti,
+    residence: profile.residence,
+    drinking: profile.drinking,
+    smoking: profile.smoking,
+    religion: profile.religion,
     matchmaker_id: profile.matchmakerId,
     relationship: profile.relationship,
     bio: profile.bio,
