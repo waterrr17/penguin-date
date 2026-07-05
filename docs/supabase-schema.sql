@@ -25,11 +25,21 @@ create table public.profiles (
   drinking text not null default '',   -- 좋아해요 | 보통 | 싫어해요
   smoking text not null default '',    -- 흡연자 | 비흡연자
   religion text not null default '',   -- 개신교 | 가톨릭 | 불교 | 그 외 종교 | 무교
+  -- 이상형
+  ideal_birth_year_min integer,
+  ideal_birth_year_max integer,
+  ideal_height_min integer,
+  ideal_height_max integer,
+  ideal_appearance text not null default '',  -- 두부상 | 아랍상 | 고양이상 | 강아지상 | 토끼상 | 곰상 | 공룡상 | 직접 입력값
+  ideal_must_have text not null default '',   -- 포기할 수 없는 한 가지
   -- 주선자 1 : 프로필 N
   matchmaker_id uuid references public.matchmakers (id),
   relationship text not null default '',
   bio text not null default '',
   photo_url text,
+  -- 수정/삭제용 비밀번호 (숫자 4자리) + 활성화 여부
+  password text not null default '',
+  is_active boolean not null default true,
   created_at timestamptz not null default now()
 );
 
@@ -56,7 +66,84 @@ create policy "누구나 프로필 등록 가능"
   to anon
   with check (true);
 
--- 프로필 수정/삭제는 정책이 없으므로 anon 키로는 불가능합니다 (대시보드에서만 관리)
+-- 프로필 수정/삭제/비활성화는 직접 update/delete 대신 아래 RPC 함수로만 가능합니다
+-- (비밀번호 검증을 서버에서 수행하기 위함)
 
--- ── 초기 주선자 등록 예시 ──
--- insert into public.matchmakers (name) values ('이민지'), ('최우진');
+-- ── 수정/삭제용 RPC 함수 ──
+
+-- 비밀번호 검증
+create or replace function public.verify_profile_password(p_id uuid, p_password text)
+returns boolean
+language sql security definer set search_path = public as $$
+  select exists (select 1 from profiles where id = p_id and password = p_password);
+$$;
+
+-- 프로필 수정 (비밀번호 일치 시에만)
+create or replace function public.update_profile(
+  p_id uuid,
+  p_password text,
+  p_name text,
+  p_birth_year integer,
+  p_gender text,
+  p_height integer,
+  p_job text,
+  p_mbti text,
+  p_residence text,
+  p_drinking text,
+  p_smoking text,
+  p_religion text,
+  p_ideal_birth_year_min integer,
+  p_ideal_birth_year_max integer,
+  p_ideal_height_min integer,
+  p_ideal_height_max integer,
+  p_ideal_appearance text,
+  p_ideal_must_have text,
+  p_matchmaker_id uuid,
+  p_relationship text,
+  p_bio text,
+  p_photo_url text
+) returns boolean
+language plpgsql security definer set search_path = public as $$
+begin
+  update profiles set
+    name = p_name,
+    birth_year = p_birth_year,
+    gender = p_gender,
+    height = p_height,
+    job = p_job,
+    mbti = p_mbti,
+    residence = p_residence,
+    drinking = p_drinking,
+    smoking = p_smoking,
+    religion = p_religion,
+    ideal_birth_year_min = p_ideal_birth_year_min,
+    ideal_birth_year_max = p_ideal_birth_year_max,
+    ideal_height_min = p_ideal_height_min,
+    ideal_height_max = p_ideal_height_max,
+    ideal_appearance = p_ideal_appearance,
+    ideal_must_have = p_ideal_must_have,
+    matchmaker_id = p_matchmaker_id,
+    relationship = p_relationship,
+    bio = p_bio,
+    photo_url = p_photo_url
+  where id = p_id and password = p_password;
+  return found;
+end $$;
+
+-- 프로필 삭제 (비밀번호 일치 시에만)
+create or replace function public.delete_profile(p_id uuid, p_password text)
+returns boolean
+language plpgsql security definer set search_path = public as $$
+begin
+  delete from profiles where id = p_id and password = p_password;
+  return found;
+end $$;
+
+-- 프로필 활성화/비활성화 (비밀번호 일치 시에만)
+create or replace function public.set_profile_active(p_id uuid, p_password text, p_active boolean)
+returns boolean
+language plpgsql security definer set search_path = public as $$
+begin
+  update profiles set is_active = p_active where id = p_id and password = p_password;
+  return found;
+end $$;

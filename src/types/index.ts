@@ -17,11 +17,18 @@ export interface Profile {
   drinking: string; // 좋아해요 | 보통 | 싫어해요
   smoking: string; // 흡연자 | 비흡연자
   religion: string; // 개신교 | 가톨릭 | 불교 | 그 외 종교 | 무교
+  idealBirthYearMin: number | null;
+  idealBirthYearMax: number | null;
+  idealHeightMin: number | null;
+  idealHeightMax: number | null;
+  idealAppearance: string; // 두부상 | 아랍상 | 고양이상 | 강아지상 | 토끼상 | 곰상 | 공룡상 | 직접 입력값
+  idealMustHave: string; // 포기할 수 없는 한 가지
   matchmakerId: string | null;
   matchmakerName: string; // matchmakers 테이블 조인 결과
   relationship: string;
   bio: string;
   photoUrl: string | null;
+  isActive: boolean;
   createdAt: string;
 }
 

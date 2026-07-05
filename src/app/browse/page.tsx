@@ -5,33 +5,15 @@ import Link from 'next/link'
 import ProfileCard from '@/components/ProfileCard'
 import { SAMPLE_PROFILES } from '@/data/sampleProfiles'
 import { fetchProfiles } from '@/lib/supabase'
-import { ageFromBirthYear } from '@/lib/age'
 import type { Profile } from '@/types'
 
 type GenderFilter = 'all' | 'male' | 'female'
-type AgeFilter = 'all' | '20-24' | '25-29' | '30+'
-
-const AGE_OPTIONS: { value: AgeFilter; label: string }[] = [
-  { value: 'all', label: '전체 나이' },
-  { value: '20-24', label: '20~24세' },
-  { value: '25-29', label: '25~29세' },
-  { value: '30+', label: '30세 이상' },
-]
-
-const matchAge = (birthYear: number, filter: AgeFilter) => {
-  const age = ageFromBirthYear(birthYear)
-  if (filter === '20-24') return age >= 20 && age <= 24
-  if (filter === '25-29') return age >= 25 && age <= 29
-  if (filter === '30+') return age >= 30
-  return true
-}
 
 export default function BrowsePage() {
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [loading, setLoading] = useState(true)
   const [isSample, setIsSample] = useState(false)
   const [gender, setGender] = useState<GenderFilter>('all')
-  const [ageRange, setAgeRange] = useState<AgeFilter>('all')
 
   useEffect(() => {
     let cancelled = false
@@ -57,26 +39,27 @@ export default function BrowsePage() {
 
   const filtered = useMemo(
     () =>
-      profiles.filter(
-        p => (gender === 'all' || p.gender === gender) && matchAge(p.birthYear, ageRange),
-      ),
-    [profiles, gender, ageRange],
+      profiles
+        .filter(p => gender === 'all' || p.gender === gender)
+        // 비활성 프로필은 가장 아래로
+        .sort((a, b) => Number(b.isActive) - Number(a.isActive)),
+    [profiles, gender],
   )
 
   return (
     <main
       className="min-h-screen"
       style={{
-        background: '#f0f9ff',
-        backgroundImage: `radial-gradient(circle, #bae6fd 1px, transparent 1px)`,
+        background: '#FFEABB',
+        backgroundImage: `radial-gradient(circle, #FD7979 1px, transparent 1px)`,
         backgroundSize: '24px 24px',
       }}
     >
       {/* 상단 헤더 */}
-      <header className="sticky top-0 z-20 bg-white/75 backdrop-blur-md border-b border-sky-100 flex items-center gap-3 px-4 h-14">
+      <header className="sticky top-0 z-20 bg-white/75 backdrop-blur-md border-b border-peri-100 flex items-center gap-3 px-4 h-14">
         <Link
           href="/"
-          className="w-8 h-8 flex items-center justify-center rounded-full bg-sky-50 text-sky-500 hover:bg-sky-100 transition-colors text-lg"
+          className="w-8 h-8 flex items-center justify-center rounded-full bg-peri-50 text-peri-500 hover:bg-peri-100 transition-colors text-lg"
         >
           ←
         </Link>
@@ -88,40 +71,24 @@ export default function BrowsePage() {
       <div className="max-w-sm mx-auto px-4 py-5 flex flex-col gap-4">
 
         {/* ── 필터 ── */}
-        <div className="flex flex-col gap-2">
-          {/* 성별 필터 */}
-          <div className="flex gap-1.5">
-            <FilterChip active={gender === 'all'} onClick={() => setGender('all')}>
-              전체
-            </FilterChip>
-            <FilterChip
-              active={gender === 'male'}
-              activeCls="bg-sky-400 text-white shadow-sm"
-              onClick={() => setGender('male')}
-            >
-              남성
-            </FilterChip>
-            <FilterChip
-              active={gender === 'female'}
-              activeCls="bg-rose-300 text-white shadow-sm"
-              onClick={() => setGender('female')}
-            >
-              여성
-            </FilterChip>
-          </div>
-
-          {/* 나이 필터 */}
-          <div className="flex gap-1.5 flex-wrap">
-            {AGE_OPTIONS.map(opt => (
-              <FilterChip
-                key={opt.value}
-                active={ageRange === opt.value}
-                onClick={() => setAgeRange(opt.value)}
-              >
-                {opt.label}
-              </FilterChip>
-            ))}
-          </div>
+        <div className="flex gap-1.5">
+          <FilterChip active={gender === 'all'} onClick={() => setGender('all')}>
+            전체
+          </FilterChip>
+          <FilterChip
+            active={gender === 'male'}
+            activeCls="bg-peri-400 text-white shadow-sm"
+            onClick={() => setGender('male')}
+          >
+            남성
+          </FilterChip>
+          <FilterChip
+            active={gender === 'female'}
+            activeCls="bg-rose-300 text-white shadow-sm"
+            onClick={() => setGender('female')}
+          >
+            여성
+          </FilterChip>
         </div>
 
         {/* 샘플 데이터 안내 */}
@@ -145,7 +112,7 @@ export default function BrowsePage() {
             <p className="text-sm">펭귄들을 불러오는 중...</p>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="bg-white rounded-3xl border border-dashed border-sky-200 px-6 py-12 flex flex-col items-center gap-3 text-center">
+          <div className="bg-white rounded-3xl border border-dashed border-peri-200 px-6 py-12 flex flex-col items-center gap-3 text-center">
             <span className="text-5xl">🐧</span>
             <p className="text-sm text-slate-400 leading-relaxed">
               조건에 맞는 펭귄이 아직 없어요
@@ -154,7 +121,7 @@ export default function BrowsePage() {
             </p>
             <Link
               href="/register"
-              className="mt-1 px-5 py-2 rounded-full bg-sky-400 hover:bg-sky-500 text-white text-sm font-semibold transition-colors"
+              className="mt-1 px-5 py-2 rounded-full bg-peri-400 hover:bg-peri-500 text-white text-sm font-semibold transition-colors"
             >
               프로필 등록하기
             </Link>
@@ -193,7 +160,7 @@ function FilterChip({
       className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-150 ${
         active
           ? activeCls
-          : 'bg-white text-slate-400 border border-sky-100 hover:bg-sky-50'
+          : 'bg-white text-slate-400 border border-peri-100 hover:bg-peri-50'
       }`}
     >
       {children}
