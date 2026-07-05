@@ -1,3 +1,25 @@
+// 주선자 (matchmakers 테이블). 주선자 1 : 프로필 N
+export interface Matchmaker {
+  id: string;
+  name: string;
+}
+
+// 등록 폼 / DB(profiles 테이블)와 일치하는 프로필 타입
+export interface Profile {
+  id: string;
+  name: string;
+  birthYear: number;
+  gender: 'male' | 'female';
+  height: number | null;
+  job: string;
+  matchmakerId: string | null;
+  matchmakerName: string; // matchmakers 테이블 조인 결과
+  relationship: string;
+  bio: string;
+  photoUrl: string | null;
+  createdAt: string;
+}
+
 // 사용자 프로필 타입
 export interface UserProfile {
   id: string;
