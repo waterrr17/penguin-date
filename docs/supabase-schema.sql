@@ -36,7 +36,8 @@ create table public.profiles (
   matchmaker_id uuid references public.matchmakers (id),
   relationship text not null default '',
   bio text not null default '',
-  photo_url text,
+  -- 프로필 사진 대신 쓰는 '내 펭귄' 조합 {body,hat,glasses,neck,item}
+  penguin_look jsonb,
   -- 수정/삭제용 비밀번호 (숫자 4자리) + 활성화 여부
   password text not null default '',
   is_active boolean not null default true,
@@ -101,7 +102,7 @@ create or replace function public.update_profile(
   p_matchmaker_id uuid,
   p_relationship text,
   p_bio text,
-  p_photo_url text
+  p_penguin_look jsonb
 ) returns boolean
 language plpgsql security definer set search_path = public as $$
 begin
@@ -125,7 +126,7 @@ begin
     matchmaker_id = p_matchmaker_id,
     relationship = p_relationship,
     bio = p_bio,
-    photo_url = p_photo_url
+    penguin_look = p_penguin_look
   where id = p_id and password = p_password;
   return found;
 end $$;

@@ -1,3 +1,5 @@
+import type { PenguinLook } from '@/config/penguinLook';
+
 // 주선자 (matchmakers 테이블). 주선자 1 : 프로필 N
 export interface Matchmaker {
   id: string;
@@ -14,6 +16,7 @@ export interface Profile {
   job: string;
   mbti: string;
   residence: string;
+  hobbies: string | null;
   drinking: string; // 좋아해요 | 보통 | 싫어해요
   smoking: string; // 흡연자 | 비흡연자
   religion: string; // 개신교 | 가톨릭 | 불교 | 그 외 종교 | 무교
@@ -27,7 +30,8 @@ export interface Profile {
   matchmakerName: string; // matchmakers 테이블 조인 결과
   relationship: string;
   bio: string;
-  photoUrl: string | null;
+  /** 프로필 사진 대신 쓰는 '내 펭귄'. 아직 고르지 않았으면 null (id로 자동 배정) */
+  penguinLook: PenguinLook | null;
   isActive: boolean;
   createdAt: string;
 }

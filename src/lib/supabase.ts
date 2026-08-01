@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { normalizeLook } from '@/config/penguinLook'
 import type { Matchmaker, Profile } from '@/types'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -18,6 +19,7 @@ interface ProfileRow {
   job: string
   mbti: string
   residence: string
+  hobbies: string
   drinking: string
   smoking: string
   religion: string
@@ -30,7 +32,7 @@ interface ProfileRow {
   matchmaker_id: string | null
   relationship: string
   bio: string
-  photo_url: string | null
+  penguin_look: unknown | null
   is_active: boolean
   created_at: string
   matchmakers: { name: string } | null // 주선자 조인 결과
@@ -50,6 +52,7 @@ const toProfile = (row: ProfileRow): Profile => ({
   job: row.job,
   mbti: row.mbti,
   residence: row.residence,
+  hobbies: row.hobbies ?? null,
   drinking: row.drinking,
   smoking: row.smoking,
   religion: row.religion,
@@ -63,7 +66,7 @@ const toProfile = (row: ProfileRow): Profile => ({
   matchmakerName: row.matchmakers?.name ?? '',
   relationship: row.relationship,
   bio: row.bio,
-  photoUrl: row.photo_url,
+  penguinLook: row.penguin_look ? normalizeLook(row.penguin_look) : null,
   isActive: row.is_active,
   createdAt: row.created_at,
 })
@@ -125,6 +128,7 @@ export async function insertProfile(
     job: profile.job,
     mbti: profile.mbti,
     residence: profile.residence,
+    hobbies: profile.hobbies || null,
     drinking: profile.drinking,
     smoking: profile.smoking,
     religion: profile.religion,
@@ -137,7 +141,7 @@ export async function insertProfile(
     matchmaker_id: profile.matchmakerId,
     relationship: profile.relationship,
     bio: profile.bio,
-    photo_url: profile.photoUrl,
+    penguin_look: profile.penguinLook,
   })
 
   if (error) throw new Error(`프로필 등록 실패: ${error.message}`)
@@ -178,6 +182,7 @@ export async function updateProfile(
     p_job: profile.job,
     p_mbti: profile.mbti,
     p_residence: profile.residence,
+    p_hobbies: profile.hobbies || null,
     p_drinking: profile.drinking,
     p_smoking: profile.smoking,
     p_religion: profile.religion,
@@ -190,7 +195,7 @@ export async function updateProfile(
     p_matchmaker_id: profile.matchmakerId,
     p_relationship: profile.relationship,
     p_bio: profile.bio,
-    p_photo_url: profile.photoUrl,
+    p_penguin_look: profile.penguinLook,
   })
 
   if (error) throw new Error(`프로필 수정 실패: ${error.message}`)

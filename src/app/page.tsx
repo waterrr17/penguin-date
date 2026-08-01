@@ -5,9 +5,7 @@ export default function HomePage() {
     <main
       className="min-h-screen flex flex-col"
       style={{
-        background: '#FFEABB',
-        backgroundImage: `radial-gradient(circle, #FD7979 1px, transparent 1px)`,
-        backgroundSize: '24px 24px',
+        background: 'linear-gradient(to bottom, #F7FBFF 0%, #E6F1FC 45%, #CFE3F7 100%)',
       }}
     >
 
@@ -32,35 +30,34 @@ export default function HomePage() {
         {/* 작은 구분선 */}
         <div className="flex items-center gap-1.5 mt-1">
           <span className="w-1.5 h-1.5 rounded-full bg-peri-300" />
-          <span className="w-1.5 h-1.5 rounded-full bg-rose-300" />
+          <span className="w-1.5 h-1.5 rounded-full bg-sky-300" />
           <span className="w-1.5 h-1.5 rounded-full bg-peri-300" />
         </div>
       </div>
 
-      {/* 버튼 섹션 — 좌우 분할 */}
-      <div className="flex h-52 rounded-t-3xl overflow-hidden shadow-[0_-8px_24px_-12px_rgba(170,196,245,0.6)]">
+      {/* 빙하 버튼 섹션 — 좌우 분할, 빙산 오브젝트 */}
+      <div className="flex h-64 gap-2 px-2">
 
-        {/* 프로필 등록하기 */}
+        {/* 프로필 등록하기 — 빙산 */}
         <Link
           href="/register"
-          className="flex-1 flex flex-col items-center justify-center gap-3 bg-peri-400 hover:bg-peri-500 active:bg-peri-600 transition-colors text-white"
+          className="iceberg iceberg-a flex-1 relative flex flex-col items-center justify-end gap-2 pb-8 text-peri-700 hover:-translate-y-1 active:translate-y-0 transition-transform duration-300"
         >
-          <span className="text-4xl">✏️</span>
-          <span className="text-base font-semibold tracking-wide">프로필 등록하기</span>
-          <span className="text-xs text-peri-100">이상형을 알려주세요</span>
+          <span className="absolute top-10 left-1/4 w-10 h-10 rounded-full bg-white/60 blur-xl pointer-events-none" />
+          <span className="text-4xl drop-shadow-sm">✏️</span>
+          <span className="text-base font-semibold tracking-wide drop-shadow-sm">프로필 등록하기</span>
+          <span className="text-xs text-peri-600/80">이상형을 알려주세요</span>
         </Link>
 
-        {/* 구분선 */}
-        <div className="w-px bg-white/30" />
-
-        {/* 프로필 둘러보기 */}
+        {/* 프로필 둘러보기 — 빙산 */}
         <Link
           href="/browse"
-          className="flex-1 flex flex-col items-center justify-center gap-3 bg-rose-300 hover:bg-rose-400 active:bg-rose-500 transition-colors text-white"
+          className="iceberg iceberg-b flex-1 relative flex flex-col items-center justify-end gap-2 pb-8 text-white hover:-translate-y-1 active:translate-y-0 transition-transform duration-300"
         >
-          <span className="text-4xl">💌</span>
-          <span className="text-base font-semibold tracking-wide">프로필 둘러보기</span>
-          <span className="text-xs text-rose-100">내 이상형 찾아보기</span>
+          <span className="absolute top-8 right-1/4 w-12 h-12 rounded-full bg-white/40 blur-xl pointer-events-none" />
+          <span className="text-4xl drop-shadow-sm">💌</span>
+          <span className="text-base font-semibold tracking-wide drop-shadow-sm">프로필 둘러보기</span>
+          <span className="text-xs text-white/80">내 이상형 찾아보기</span>
         </Link>
 
       </div>

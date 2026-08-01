@@ -12,7 +12,8 @@ import {
 } from '@/lib/supabase'
 import { EDIT_PASSWORD_KEY } from '@/lib/editAuth'
 import { birthYearLabel } from '@/lib/age'
-import { assetPath } from '@/lib/paths'
+import { profileLook } from '@/lib/profileLook'
+import PenguinAvatar from '@/components/PenguinAvatar'
 import type { Profile } from '@/types'
 
 type ManageAction = 'edit' | 'delete' | 'toggle'
@@ -33,9 +34,8 @@ export default function ProfileDetailPage() {
     <main
       className="min-h-screen"
       style={{
-        background: '#FFEABB',
-        backgroundImage: `radial-gradient(circle, #FD7979 1px, transparent 1px)`,
-        backgroundSize: '24px 24px',
+        background:
+          'linear-gradient(to bottom, #F7FBFF 0%, #E6F1FC 45%, #CFE3F7 100%)',
       }}
     >
       {/* 상단 헤더 */}
@@ -154,7 +154,7 @@ function ProfileDetail() {
     return (
       <div className="max-w-sm mx-auto px-4 py-16 flex flex-col items-center gap-3 text-center">
         <span className="text-5xl">🐧</span>
-        <p className="text-sm text-slate-400 leading-relaxed">
+        <p className="text-sm text-slate-500 leading-relaxed">
           프로필을 찾을 수 없어요
           <br />
           삭제되었거나 잘못된 주소일 수 있어요
@@ -177,18 +177,9 @@ function ProfileDetail() {
       {/* ── 프로필 요약 카드 ── */}
       <section className="bg-white rounded-3xl border border-peri-100 p-6 flex flex-col items-center gap-3 shadow-sm">
         <div
-          className={`w-28 h-28 rounded-3xl overflow-hidden flex items-center justify-center text-6xl ${style.avatar}`}
+          className={`w-28 h-28 rounded-3xl flex items-center justify-center ${style.avatar}`}
         >
-          {profile.photoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={assetPath(profile.photoUrl)}
-              alt={`${profile.name} 프로필 사진`}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            '🐧'
-          )}
+          <PenguinAvatar look={profileLook(profile)} size={104} />
         </div>
 
         <div className="flex items-center gap-2">
@@ -225,6 +216,7 @@ function ProfileDetail() {
           <InfoRow label="출생연도" value={`${profile.birthYear}년`} />
           <InfoRow label="키" value={profile.height ? `${profile.height}cm` : '미입력'} />
           <InfoRow label="직업" value={profile.job || '미입력'} />
+          <InfoRow label="취미" value={profile.hobbies || '미입력'} />
           <InfoRow label="MBTI" value={profile.mbti || '미입력'} />
           <InfoRow label="거주지" value={profile.residence || '미입력'} />
           <InfoRow label="음주" value={profile.drinking || '미입력'} />
@@ -292,7 +284,7 @@ function ProfileDetail() {
       </div>
 
       {/* ── 등록일 ── */}
-      <p className="text-center text-xs text-slate-300">
+      <p className="text-center text-xs text-slate-500">
         {new Date(profile.createdAt).toLocaleDateString('ko-KR', {
           year: 'numeric',
           month: 'long',
@@ -369,7 +361,7 @@ function rangeLabel(min: number | null, max: number | null, unit: string) {
 
 function LoadingPenguin() {
   return (
-    <div className="flex flex-col items-center gap-3 py-16 text-slate-400">
+    <div className="flex flex-col items-center gap-3 py-16 text-slate-500">
       <span className="text-4xl animate-bounce">🐧</span>
       <p className="text-sm">프로필을 불러오는 중...</p>
     </div>

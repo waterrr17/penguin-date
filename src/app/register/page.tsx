@@ -3,7 +3,12 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { PROFILE_IMAGES } from "@/config/profileAssets";
+import PenguinCustomizer from "@/components/PenguinCustomizer";
+import {
+  DEFAULT_LOOK,
+  randomLook,
+  type PenguinLook,
+} from "@/config/penguinLook";
 import { SAMPLE_MATCHMAKERS } from "@/data/sampleProfiles";
 import { adjectives, nouns, generateNickname } from "@/data/nicknames";
 import {
@@ -13,7 +18,7 @@ import {
   updateProfile,
 } from "@/lib/supabase";
 import { EDIT_PASSWORD_KEY } from "@/lib/editAuth";
-import { assetPath } from "@/lib/paths";
+import { lookFromSeed } from "@/config/penguinLook";
 import type { Matchmaker } from "@/types";
 
 const RELATIONSHIP_OPTIONS = [
@@ -45,6 +50,7 @@ interface FormState {
   gender: Gender;
   height: string;
   job: string;
+  hobbies: string;
   mbti: string;
   residence: string;
   drinking: string;
@@ -79,8 +85,7 @@ function RegisterForm() {
   const editId = searchParams?.get("edit") ?? null;
   const [editPassword, setEditPassword] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
-  const [photoModalOpen, setPhotoModalOpen] = useState(false);
+  const [penguinLook, setPenguinLook] = useState<PenguinLook>(DEFAULT_LOOK);
   // 닉네임 = 형용사 + 명사 조합
   const [selectedAdj, setSelectedAdj] = useState("");
   const [selectedNoun, setSelectedNoun] = useState("");
@@ -91,6 +96,7 @@ function RegisterForm() {
     gender: "",
     height: "",
     job: "",
+    hobbies: "",
     mbti: "",
     residence: "",
     drinking: "",
@@ -114,11 +120,7 @@ function RegisterForm() {
   // 수정 모드에서는 기존 프로필 값으로 폼을 채웁니다
   useEffect(() => {
     if (!editId) {
-      if (PROFILE_IMAGES.length > 0) {
-        setSelectedPhoto(
-          PROFILE_IMAGES[Math.floor(Math.random() * PROFILE_IMAGES.length)],
-        );
-      }
+      setPenguinLook(randomLook());
       const nickname = generateNickname();
       const [adj, noun] = nickname.split(" ");
       setSelectedAdj(adj);
@@ -145,7 +147,7 @@ function RegisterForm() {
         const [adj = "", noun = ""] = p.name.split(" ");
         setSelectedAdj(adj);
         setSelectedNoun(noun);
-        setSelectedPhoto(p.photoUrl ? (p.photoUrl.split("/").pop() ?? null) : null);
+        setPenguinLook(p.penguinLook ?? lookFromSeed(p.id));
         // '직접 입력'으로 저장된 외모 값이면 커스텀 필드에 채웁니다
         const isPresetAppearance =
           !p.idealAppearance || APPEARANCE_OPTIONS.includes(p.idealAppearance);
@@ -155,6 +157,7 @@ function RegisterForm() {
           gender: p.gender,
           height: p.height != null ? String(p.height) : "",
           job: p.job,
+          hobbies: p.hobbies ?? "",
           mbti: p.mbti,
           residence: p.residence,
           drinking: p.drinking,
@@ -236,6 +239,7 @@ function RegisterForm() {
         gender: form.gender,
         height: form.height ? Number(form.height) : null,
         job: form.job.trim(),
+        hobbies: form.hobbies.trim() || null,
         mbti: form.mbti.trim().toUpperCase(),
         residence: form.residence.trim(),
         drinking: form.drinking,
@@ -261,7 +265,7 @@ function RegisterForm() {
         matchmakerId: form.matchmakerId || null,
         relationship: form.relationship,
         bio: form.bio.trim(),
-        photoUrl: selectedPhoto ? `/assets/profiles/${selectedPhoto}` : null,
+        penguinLook,
       };
 
       if (editId && editPassword) {
@@ -305,9 +309,8 @@ function RegisterForm() {
     <main
       className="min-h-screen"
       style={{
-        background: "#FFEABB",
-        backgroundImage: `radial-gradient(circle, #FD7979 1px, transparent 1px)`,
-        backgroundSize: "24px 24px",
+        background:
+          "linear-gradient(to bottom, #F7FBFF 0%, #E6F1FC 45%, #CFE3F7 100%)",
       }}
     >
       {/* 상단 헤더 */}
@@ -333,45 +336,13 @@ function RegisterForm() {
           <span className="text-red-500">*</span> 필수 항목
         </p>
 
-        {/* ── 프로필 사진 ── */}
-        <Section title="프로필 사진">
-          {PROFILE_IMAGES.length === 0 ? (
-            <div className="rounded-2xl bg-white border border-dashed border-peri-200 p-6 flex flex-col items-center gap-2 text-center">
-              <span className="text-5xl">🐧</span>
-              <p className="text-sm text-slate-400 leading-relaxed">
-                <code className="text-xs bg-peri-50 text-peri-500 px-1.5 py-0.5 rounded">
-                  public/assets/profiles/
-                </code>
-                <br />에 이미지를 추가하면 선택할 수 있어요
-              </p>
-            </div>
-          ) : (
-            <div className="flex justify-center py-2">
-              <div className="relative">
-                <div className="w-28 h-28 rounded-3xl overflow-hidden bg-white border border-peri-100 shadow-sm flex items-center justify-center">
-                  {selectedPhoto ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={assetPath(`/assets/profiles/${selectedPhoto}`)}
-                      alt="선택된 프로필 사진"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-5xl">🐧</span>
-                  )}
-                </div>
-                {/* 사진 변경 버튼 */}
-                <button
-                  type="button"
-                  onClick={() => setPhotoModalOpen(true)}
-                  aria-label="프로필 사진 바꾸기"
-                  className="absolute -bottom-1.5 -right-1.5 w-9 h-9 rounded-full bg-peri-400 hover:bg-peri-500 active:scale-95 text-white text-base shadow-md shadow-peri-200 flex items-center justify-center transition-all duration-150"
-                >
-                  ✏️
-                </button>
-              </div>
-            </div>
-          )}
+        {/* ── 내 펭귄 (프로필 사진 대체) ── */}
+        <Section title="내 펭귄">
+          <PenguinCustomizer
+            value={penguinLook}
+            onChange={setPenguinLook}
+            previewSize={160}
+          />
         </Section>
 
         {/* ── 기본 정보 ── */}
@@ -470,6 +441,16 @@ function RegisterForm() {
                 type="text"
                 value={form.job}
                 onChange={(e) => set("job", e.target.value)}
+                className={inputCls}
+              />
+            </Row>
+
+            <Row label="취미">
+              <input
+                type="text"
+                placeholder="독서, 요리, 등산 등"
+                value={form.hobbies}
+                onChange={(e) => set("hobbies", e.target.value)}
                 className={inputCls}
               />
             </Row>
@@ -719,66 +700,6 @@ function RegisterForm() {
         <div className="h-6" />
       </form>
 
-      {/* ── 프로필 사진 선택 모달 ── */}
-      {photoModalOpen && (
-        <div
-          className="fixed inset-0 z-30 flex items-center justify-center px-6"
-          onClick={() => setPhotoModalOpen(false)}
-        >
-          {/* 배경 */}
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
-
-          {/* 패널 */}
-          <div
-            className="relative w-full max-w-sm bg-white rounded-3xl p-5 shadow-xl flex flex-col gap-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between">
-              <h2 className="font-display text-lg text-slate-800">
-                프로필 사진 고르기 🐧
-              </h2>
-              <button
-                type="button"
-                onClick={() => setPhotoModalOpen(false)}
-                aria-label="닫기"
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-peri-50 text-peri-500 hover:bg-peri-100 transition-colors"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="grid grid-cols-4 gap-2.5 max-h-80 overflow-y-auto">
-              {PROFILE_IMAGES.map((img) => (
-                <button
-                  key={img}
-                  type="button"
-                  onClick={() => {
-                    setSelectedPhoto(img);
-                    setPhotoModalOpen(false);
-                  }}
-                  className={`relative aspect-square rounded-2xl overflow-hidden border-2 transition-all duration-150 ${
-                    selectedPhoto === img
-                      ? "border-peri-400 shadow-lg shadow-peri-100 scale-[0.96]"
-                      : "border-transparent hover:border-peri-200"
-                  }`}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={assetPath(`/assets/profiles/${img}`)}
-                    alt="프로필 사진 옵션"
-                    className="w-full h-full object-cover"
-                  />
-                  {selectedPhoto === img && (
-                    <div className="absolute inset-0 bg-peri-400/20 flex items-center justify-center">
-                      <span className="text-xl">✓</span>
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </main>
   );
 }
