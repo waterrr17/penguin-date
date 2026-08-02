@@ -94,11 +94,12 @@ export default function PenguinCustomizer({
         ))}
       </div>
 
-      {/* ── 옵션 썸네일 ── */}
-      <div className="grid grid-cols-3 gap-2.5">
+      {/* ── 옵션 썸네일 (이름 없이 펭귄 모습으로만 고릅니다) ── */}
+      <div className="grid grid-cols-4 gap-2">
         {current.optional && (
           <OptionThumb
-            label="없음"
+            label={`${current.label} 없음`}
+            isNone
             selected={look[current.key] === null}
             onClick={() => select(current.key, null)}
             look={previewLook(look, current.key, null)}
@@ -138,29 +139,37 @@ function OptionThumb({
   look,
   selected,
   onClick,
+  isNone = false,
 }: {
+  /** 화면에는 안 보이고 스크린 리더용으로만 씁니다 */
   label: string
   look: PenguinLook
   selected: boolean
   onClick: () => void
+  isNone?: boolean
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      aria-label={label}
       aria-pressed={selected}
-      className={`flex flex-col items-center gap-1 p-2 rounded-2xl border-2 transition-all duration-150 ${
+      className={`relative p-1 rounded-2xl border-2 transition-all duration-150 ${
         selected
           ? 'bg-peri-50 border-peri-400 shadow-sm'
           : 'bg-white border-peri-100 hover:border-peri-200 active:scale-[0.97]'
       }`}
     >
-      <PenguinAvatar look={look} size={64} />
-      <span
-        className={`text-xs font-medium ${selected ? 'text-peri-600' : 'text-slate-500'}`}
-      >
-        {label}
-      </span>
+      <PenguinAvatar look={look} size={64} fluid />
+      {/* '없음'은 글자 대신 표식으로 알려줍니다 */}
+      {isNone && (
+        <span
+          aria-hidden
+          className="absolute top-1 right-1 w-4 h-4 flex items-center justify-center rounded-full bg-slate-200 text-slate-500 text-[10px] font-bold leading-none"
+        >
+          ✕
+        </span>
+      )}
     </button>
   )
 }

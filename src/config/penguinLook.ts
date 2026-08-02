@@ -33,6 +33,11 @@ export const CATEGORIES: CategoryConfig[] = [
       { name: 'navy', label: '네이비' },
       { name: 'ice', label: '아이스' },
       { name: 'pink', label: '핑크' },
+      { name: 'gray', label: '그레이' },
+      { name: 'green', label: '그린' },
+      { name: 'lavender', label: '라벤더' },
+      { name: 'butter', label: '버터 크림' },
+      { name: 'coral', label: '코랄 피치' },
     ],
   },
   {
@@ -42,6 +47,7 @@ export const CATEGORIES: CategoryConfig[] = [
     options: [
       { name: 'beanie', label: '비니' },
       { name: 'straw', label: '밀짚모자' },
+      { name: 'crown', label: '왕관' },
     ],
   },
   {
@@ -49,8 +55,9 @@ export const CATEGORIES: CategoryConfig[] = [
     label: '안경',
     optional: true,
     options: [
-      { name: 'round', label: '둥근 안경' },
       { name: 'sun', label: '선글라스' },
+      { name: 'heart', label: '하트 선글라스' },
+      { name: 'goggles', label: '스키 고글' },
     ],
   },
   {
@@ -60,6 +67,7 @@ export const CATEGORIES: CategoryConfig[] = [
     options: [
       { name: 'tie', label: '넥타이' },
       { name: 'bowtie', label: '나비넥타이' },
+      { name: 'scarf', label: '목도리' },
     ],
   },
   {
@@ -69,6 +77,11 @@ export const CATEGORIES: CategoryConfig[] = [
     options: [
       { name: 'pebble', label: '조약돌' },
       { name: 'coffee', label: '커피' },
+      { name: 'cocktail', label: '칵테일' },
+      { name: 'fish', label: '물고기' },
+      { name: 'balloon', label: '하트 풍선' },
+      { name: 'icecream', label: '아이스크림' },
+      { name: 'snowboard', label: '스노보드' },
     ],
   },
 ]

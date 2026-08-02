@@ -5,15 +5,22 @@ interface Props {
   look: PenguinLook
   /** 한 변의 픽셀 크기 (정사각형) */
   size?: number
+  /** 좁은 화면에서 칸 너비에 맞춰 줄어들게 합니다 (size가 최대 크기가 됩니다) */
+  fluid?: boolean
   className?: string
 }
 
 // 32x32 도트 에셋을 같은 그리드 위에 겹쳐 하나의 펭귄으로 보여줍니다
-export default function PenguinAvatar({ look, size = 240, className = '' }: Props) {
+export default function PenguinAvatar({
+  look,
+  size = 240,
+  fluid = false,
+  className = '',
+}: Props) {
   return (
     <div
-      className={`relative shrink-0 ${className}`}
-      style={{ width: size, height: size }}
+      className={`relative ${fluid ? 'w-full aspect-square' : 'shrink-0'} ${className}`}
+      style={fluid ? { maxWidth: size } : { width: size, height: size }}
     >
       {LAYER_ORDER.map((category) => {
         const name = look[category]
