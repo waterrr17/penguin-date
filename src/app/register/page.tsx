@@ -10,7 +10,12 @@ import {
   type PenguinLook,
 } from "@/config/penguinLook";
 import { SAMPLE_MATCHMAKERS } from "@/data/sampleProfiles";
-import { adjectives, nouns, generateNickname } from "@/data/nicknames";
+import {
+  adjectives,
+  nouns,
+  generateNickname,
+  splitNickname,
+} from "@/data/nicknames";
 import {
   fetchMatchmakers,
   fetchProfileById,
@@ -122,7 +127,7 @@ function RegisterForm() {
     if (!editId) {
       setPenguinLook(randomLook());
       const nickname = generateNickname();
-      const [adj, noun] = nickname.split(" ");
+      const [adj, noun] = splitNickname(nickname);
       setSelectedAdj(adj);
       setSelectedNoun(noun);
       set("name", nickname);
@@ -144,7 +149,7 @@ function RegisterForm() {
           router.replace("/browse");
           return;
         }
-        const [adj = "", noun = ""] = p.name.split(" ");
+        const [adj, noun] = splitNickname(p.name);
         setSelectedAdj(adj);
         setSelectedNoun(noun);
         setPenguinLook(p.penguinLook ?? lookFromSeed(p.id));

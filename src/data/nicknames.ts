@@ -61,3 +61,14 @@ export const ALL_NICKNAMES: string[] = adjectives.flatMap((adj) =>
 export function generateNickname(): string {
   return ALL_NICKNAMES[Math.floor(Math.random() * ALL_NICKNAMES.length)];
 }
+
+// '호기심 많은 고양이' → ['호기심 많은', '고양이']
+// 형용사에 띄어쓰기가 있을 수 있어서 공백으로 나누지 않고 형용사 목록에서 찾습니다
+export function splitNickname(name: string): [string, string] {
+  const adj = adjectives
+    .filter((a) => name.startsWith(`${a} `))
+    .sort((a, b) => b.length - a.length)[0];
+  if (!adj) return ["", ""];
+  const noun = name.slice(adj.length + 1);
+  return nouns.includes(noun) ? [adj, noun] : ["", ""];
+}

@@ -22,6 +22,7 @@ create table public.profiles (
   job text not null default '',
   mbti text not null default '',
   residence text not null default '',
+  hobbies text,
   drinking text not null default '',   -- 좋아해요 | 보통 | 싫어해요
   smoking text not null default '',    -- 흡연자 | 비흡연자
   religion text not null default '',   -- 개신교 | 가톨릭 | 불교 | 그 외 종교 | 무교
@@ -67,6 +68,17 @@ create policy "누구나 프로필 등록 가능"
   to anon
   with check (true);
 
+-- password 컬럼은 anon 이 읽지 못하도록 컬럼 단위로만 조회 권한을 줍니다
+-- (새 컬럼을 추가하면 아래 grant 에도 추가해야 합니다)
+revoke select on public.profiles from anon, authenticated;
+grant select (
+  id, name, birth_year, gender, height, job, mbti, residence, hobbies,
+  drinking, smoking, religion,
+  ideal_birth_year_min, ideal_birth_year_max, ideal_height_min, ideal_height_max,
+  ideal_appearance, ideal_must_have,
+  matchmaker_id, relationship, bio, penguin_look, is_active, created_at
+) on public.profiles to anon, authenticated;
+
 -- 프로필 수정/삭제/비활성화는 직접 update/delete 대신 아래 RPC 함수로만 가능합니다
 -- (비밀번호 검증을 서버에서 수행하기 위함)
 
@@ -90,6 +102,7 @@ create or replace function public.update_profile(
   p_job text,
   p_mbti text,
   p_residence text,
+  p_hobbies text,
   p_drinking text,
   p_smoking text,
   p_religion text,
@@ -114,6 +127,7 @@ begin
     job = p_job,
     mbti = p_mbti,
     residence = p_residence,
+    hobbies = p_hobbies,
     drinking = p_drinking,
     smoking = p_smoking,
     religion = p_religion,

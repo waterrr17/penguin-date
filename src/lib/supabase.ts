@@ -9,6 +9,39 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 export const supabase: SupabaseClient | null =
   supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null
 
+// 화면에서 쓰는 프로필 컬럼 목록.
+// password 는 절대 포함하지 않습니다 (DB에서도 anon 에게 password 컬럼 조회 권한이 없어서
+// '*' 로 조회하면 권한 오류가 납니다 — docs/supabase-migration-hide-password.sql)
+const PROFILE_COLUMNS = [
+  'id',
+  'name',
+  'birth_year',
+  'gender',
+  'height',
+  'job',
+  'mbti',
+  'residence',
+  'hobbies',
+  'drinking',
+  'smoking',
+  'religion',
+  'ideal_birth_year_min',
+  'ideal_birth_year_max',
+  'ideal_height_min',
+  'ideal_height_max',
+  'ideal_appearance',
+  'ideal_must_have',
+  'matchmaker_id',
+  'relationship',
+  'bio',
+  'penguin_look',
+  'is_active',
+  'created_at',
+].join(', ')
+
+// 주선자 이름 조인까지 포함한 조회 구문
+const PROFILE_SELECT = `${PROFILE_COLUMNS}, matchmakers(name)`
+
 // profiles 테이블 row (snake_case) ↔ 앱 타입 (camelCase) 변환
 interface ProfileRow {
   id: string
@@ -77,7 +110,7 @@ export async function fetchProfiles(): Promise<Profile[] | null> {
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('*, matchmakers(name)')
+    .select(PROFILE_SELECT)
     .order('is_active', { ascending: false }) // 비활성 프로필은 아래로
     .order('created_at', { ascending: false })
 
@@ -91,7 +124,7 @@ export async function fetchProfileById(id: string): Promise<Profile | null> {
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('*, matchmakers(name)')
+    .select(PROFILE_SELECT)
     .eq('id', id)
     .maybeSingle()
 
