@@ -91,6 +91,8 @@ function RegisterForm() {
   const [editPassword, setEditPassword] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [penguinLook, setPenguinLook] = useState<PenguinLook>(DEFAULT_LOOK);
+  // 이상형 출생연도를 직접 수정했다면 더 이상 자동으로 채우지 않습니다
+  const [idealYearTouched, setIdealYearTouched] = useState(false);
   // 닉네임 = 형용사 + 명사 조합
   const [selectedAdj, setSelectedAdj] = useState("");
   const [selectedNoun, setSelectedNoun] = useState("");
@@ -111,8 +113,8 @@ function RegisterForm() {
     relationship: "",
     idealBirthYearMin: "",
     idealBirthYearMax: "",
-    idealHeightMin: "",
-    idealHeightMax: "",
+    idealHeightMin: "150",
+    idealHeightMax: "190",
     idealAppearance: "",
     idealAppearanceCustom: "",
     idealMustHave: "",
@@ -141,6 +143,7 @@ function RegisterForm() {
       return;
     }
     setEditPassword(pw);
+    setIdealYearTouched(true);
 
     fetchProfileById(editId)
       .then((p) => {
@@ -209,6 +212,25 @@ function RegisterForm() {
 
   const set = (field: keyof FormState, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+
+  // 본인 출생연도를 넣으면 이상형 출생연도를 ±1로 미리 채워줍니다
+  // (이상형 쪽을 직접 고친 뒤에는 건드리지 않습니다)
+  const setBirthYear = (value: string) => {
+    const year = Number(value);
+    const fillIdeal =
+      !idealYearTouched && /^\d{4}$/.test(value) && year >= 1900 && year <= 2100;
+
+    setForm((prev) => ({
+      ...prev,
+      birthYear: value,
+      ...(fillIdeal
+        ? {
+            idealBirthYearMin: String(year - 1),
+            idealBirthYearMax: String(year + 1),
+          }
+        : {}),
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -399,7 +421,7 @@ function RegisterForm() {
                   min={1900}
                   max={2100}
                   value={form.birthYear}
-                  onChange={(e) => set("birthYear", e.target.value)}
+                  onChange={(e) => setBirthYear(e.target.value)}
                   className={inputCls}
                 />
                 <span className="text-slate-300 text-sm shrink-0">년생</span>
@@ -571,7 +593,10 @@ function RegisterForm() {
                   min={1900}
                   max={2100}
                   value={form.idealBirthYearMin}
-                  onChange={(e) => set("idealBirthYearMin", e.target.value)}
+                  onChange={(e) => {
+                    setIdealYearTouched(true);
+                    set("idealBirthYearMin", e.target.value);
+                  }}
                   className={`${inputCls} text-center`}
                 />
                 <span className="text-slate-300 text-sm shrink-0">~</span>
@@ -580,7 +605,10 @@ function RegisterForm() {
                   min={1900}
                   max={2100}
                   value={form.idealBirthYearMax}
-                  onChange={(e) => set("idealBirthYearMax", e.target.value)}
+                  onChange={(e) => {
+                    setIdealYearTouched(true);
+                    set("idealBirthYearMax", e.target.value);
+                  }}
                   className={`${inputCls} text-center`}
                 />
                 <span className="text-slate-300 text-sm shrink-0">년생</span>
