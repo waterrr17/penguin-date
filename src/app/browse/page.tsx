@@ -12,6 +12,7 @@ import {
   type SendLikeResult,
 } from "@/lib/likes";
 import { fetchProfiles } from "@/lib/supabase";
+import { toast } from "@/components/common/Toast";
 import type { Profile } from "@/types";
 
 type GenderFilter = "all" | "male" | "female";
@@ -73,9 +74,9 @@ export default function BrowsePage() {
     setSentLikes((prev) => new Set(prev).add(toId));
     if (result === "matched") {
       setMatches((prev) => new Set(prev).add(toId));
-      alert("매칭이 성사됐어요! 🎉 서로 관심을 보냈어요");
+      toast("매칭이 성사됐어요! 🎉 서로 관심을 보냈어요");
     } else if (result === "liked") {
-      alert("관심을 보냈어요 💌 상대도 관심을 보내면 매칭돼요");
+      toast("관심을 보냈어요 💌 상대도 관심을 보내면 매칭돼요");
     }
   };
 

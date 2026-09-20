@@ -73,6 +73,22 @@ body {
   animation: sparkle 1.8s ease-in-out infinite;
 }
 
+/* alert() 대체 토스트가 아래에서 올라오는 효과 */
+@keyframes toast-in {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-toast-in {
+  animation: toast-in 0.2s ease-out;
+}
+
 /* 홈 화면 하단 빙산 버튼 */
 .iceberg {
   clip-path: polygon(

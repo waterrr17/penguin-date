@@ -23,6 +23,7 @@ import {
   updateProfile,
 } from "@/lib/supabase";
 import { EDIT_PASSWORD_KEY } from "@/lib/editAuth";
+import { toast } from "@/components/common/Toast";
 import { lookFromSeed } from "@/config/penguinLook";
 import type { Matchmaker } from "@/types";
 
@@ -148,7 +149,7 @@ function RegisterForm() {
     fetchProfileById(editId)
       .then((p) => {
         if (!p) {
-          alert("프로필을 찾을 수 없어요 🐧");
+          toast("프로필을 찾을 수 없어요 🐧", "error");
           router.replace("/browse");
           return;
         }
@@ -189,7 +190,7 @@ function RegisterForm() {
         });
       })
       .catch(() => {
-        alert("프로필을 불러오지 못했어요. 다시 시도해 주세요.");
+        toast("프로필을 불러오지 못했어요. 다시 시도해 주세요.", "error");
         router.replace(`/profile?id=${editId}`);
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -237,7 +238,7 @@ function RegisterForm() {
     if (submitting) return;
 
     if (!form.name.trim() || !form.birthYear || !form.gender) {
-      alert("출생연도, 성별은 꼭 입력해 주세요 🐧");
+      toast("출생연도, 성별은 꼭 입력해 주세요 🐧", "error");
       return;
     }
 
@@ -249,12 +250,12 @@ function RegisterForm() {
         form.idealHeightMax &&
         Number(form.idealHeightMin) > Number(form.idealHeightMax))
     ) {
-      alert("이상형 범위를 확인해 주세요 (최소값이 최대값보다 커요) 🐧");
+      toast("이상형 범위를 확인해 주세요 (최소값이 최대값보다 커요) 🐧", "error");
       return;
     }
 
     if (!editId && !/^\d{4}$/.test(form.password)) {
-      alert("비밀번호는 숫자 4자리로 입력해 주세요 🐧");
+      toast("비밀번호는 숫자 4자리로 입력해 주세요 🐧", "error");
       return;
     }
 
@@ -299,15 +300,15 @@ function RegisterForm() {
         // 수정 모드
         const result = await updateProfile(editId, editPassword, payload);
         if (result === "no-db") {
-          alert("아직 DB가 연결되지 않았어요. 관리자에게 문의해 주세요 🐧");
+          toast("아직 DB가 연결되지 않았어요. 관리자에게 문의해 주세요 🐧", "error");
           return;
         }
         if (result === "wrong-password") {
-          alert("비밀번호가 일치하지 않아요 🐧");
+          toast("비밀번호가 일치하지 않아요 🐧", "error");
           return;
         }
         sessionStorage.removeItem(EDIT_PASSWORD_KEY);
-        alert("프로필이 수정되었어요! ✨");
+        toast("프로필이 수정되었어요! ✨");
         router.push(`/profile?id=${editId}`);
         return;
       }
@@ -315,17 +316,18 @@ function RegisterForm() {
       const saved = await insertProfile(payload, form.password);
 
       if (!saved) {
-        alert("아직 DB가 연결되지 않았어요. 관리자에게 문의해 주세요 🐧");
+        toast("아직 DB가 연결되지 않았어요. 관리자에게 문의해 주세요 🐧", "error");
         return;
       }
 
-      alert("프로필이 등록되었어요! 🎉");
+      toast("프로필이 등록되었어요! 🎉");
       router.push("/browse");
     } catch (err) {
-      alert(
+      toast(
         err instanceof Error
           ? err.message
           : "등록 중 문제가 생겼어요. 다시 시도해 주세요.",
+        "error",
       );
     } finally {
       setSubmitting(false);

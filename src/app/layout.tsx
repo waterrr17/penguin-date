@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import { Do_Hyeon, Noto_Sans_KR } from 'next/font/google'
+import ToastHost from '@/components/common/Toast'
+import ConfirmHost from '@/components/common/ConfirmDialog'
 import '../styles/globals.css'
 
 // 본문 폰트
@@ -59,7 +61,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko" className={`${notoSansKr.variable} ${doHyeon.variable}`}>
-      <body className="font-sans">{children}</body>
+      <body className="font-sans">
+        {children}
+        <ToastHost />
+        <ConfirmHost />
+      </body>
     </html>
   )
 }

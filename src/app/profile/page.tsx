@@ -18,6 +18,8 @@ import { MY_PROFILE_KEY, getMySession, compatibility } from '@/lib/matching'
 import { fetchLikesSent, fetchMyMatches, type SendLikeResult } from '@/lib/likes'
 import PenguinAvatar from '@/components/PenguinAvatar'
 import LikeButton from '@/components/LikeButton'
+import { toast } from '@/components/common/Toast'
+import { confirmDialog } from '@/components/common/ConfirmDialog'
 import type { Profile } from '@/types'
 
 type ManageAction = 'edit' | 'delete' | 'toggle'
@@ -184,11 +186,11 @@ function ProfileDetail() {
   // (성공하지 않았는데 "처리됐다"고 안내하는 일이 없도록)
   const reportFailure = (result: MutationResult) => {
     if (result === 'no-db') {
-      alert('아직 DB가 연결되지 않았어요 🐧')
+      toast('아직 DB가 연결되지 않았어요 🐧', 'error')
       return false
     }
     if (result === 'wrong-password') {
-      alert('비밀번호가 일치하지 않아요 🐧')
+      toast('비밀번호가 일치하지 않아요 🐧', 'error')
       return false
     }
     return true
@@ -198,7 +200,7 @@ function ProfileDetail() {
   const handleConfirm = async () => {
     if (!profile || processing) return
     if (!/^\d{4}$/.test(password)) {
-      alert('비밀번호는 숫자 4자리예요 🐧')
+      toast('비밀번호는 숫자 4자리예요 🐧', 'error')
       return
     }
 
@@ -206,11 +208,11 @@ function ProfileDetail() {
     try {
       const verified = await verifyProfilePassword(profile.id, password)
       if (verified === null) {
-        alert('아직 DB가 연결되지 않았어요 🐧')
+        toast('아직 DB가 연결되지 않았어요 🐧', 'error')
         return
       }
       if (!verified) {
-        alert('비밀번호가 일치하지 않아요 🐧')
+        toast('비밀번호가 일치하지 않아요 🐧', 'error')
         return
       }
 
@@ -222,11 +224,15 @@ function ProfileDetail() {
       }
 
       if (action === 'delete') {
-        if (!confirm('정말 삭제할까요? 삭제하면 되돌릴 수 없어요 🐧')) return
+        const ok = await confirmDialog('정말 삭제할까요? 삭제하면 되돌릴 수 없어요 🐧', {
+          danger: true,
+          confirmText: '삭제하기',
+        })
+        if (!ok) return
         const deleted = await deleteProfile(profile.id, password)
         if (!reportFailure(deleted)) return
         closeModal()
-        alert('프로필이 삭제되었어요')
+        toast('프로필이 삭제되었어요')
         router.push('/browse')
         return
       }
@@ -237,9 +243,9 @@ function ProfileDetail() {
       if (!reportFailure(toggled)) return
       setProfile({ ...profile, isActive: nextActive })
       closeModal()
-      alert(nextActive ? '프로필을 다시 활성화했어요 🎉' : '프로필을 비활성화했어요 💤')
+      toast(nextActive ? '프로필을 다시 활성화했어요 🎉' : '프로필을 비활성화했어요 💤')
     } catch (err) {
-      alert(err instanceof Error ? err.message : '처리 중 문제가 생겼어요. 다시 시도해 주세요.')
+      toast(err instanceof Error ? err.message : '처리 중 문제가 생겼어요. 다시 시도해 주세요.', 'error')
     } finally {
       setProcessing(false)
     }
@@ -380,9 +386,9 @@ function ProfileDetail() {
             setLiked(true)
             if (result === 'matched') {
               setMatched(true)
-              alert('매칭이 성사됐어요! 🎉 서로 관심을 보냈어요')
+              toast('매칭이 성사됐어요! 🎉 서로 관심을 보냈어요')
             } else if (result === 'liked') {
-              alert('관심을 보냈어요 💌 상대도 관심을 보내면 매칭돼요')
+              toast('관심을 보냈어요 💌 상대도 관심을 보내면 매칭돼요')
             }
           }}
           className="w-full min-h-[44px] rounded-2xl text-sm font-semibold"

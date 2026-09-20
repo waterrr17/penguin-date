@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import PenguinAvatar from '@/components/PenguinAvatar'
+import { confirmDialog } from '@/components/common/ConfirmDialog'
 import { birthYearLabel } from '@/lib/age'
 import { profileLook } from '@/lib/profileLook'
 import { fetchProfiles } from '@/lib/supabase'
@@ -352,8 +353,12 @@ function MatchmakerRow({
       <button
         type="button"
         disabled={busy}
-        onClick={() => {
-          if (confirm(`'${stat.name}' 주선자를 삭제할까요?`)) onDelete()
+        onClick={async () => {
+          const ok = await confirmDialog(`'${stat.name}' 주선자를 삭제할까요?`, {
+            danger: true,
+            confirmText: '삭제하기',
+          })
+          if (ok) onDelete()
         }}
         className="min-h-[36px] px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-500 text-xs font-semibold transition-colors"
       >
