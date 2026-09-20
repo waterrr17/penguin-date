@@ -15,9 +15,41 @@ const doHyeon = Do_Hyeon({
   variable: '--font-do-hyeon',
 })
 
+// 카카오톡 등 공유 미리보기는 상대 경로를 못 읽으므로 절대 주소가 필요합니다
+const SITE_URL = 'https://waterrr17.github.io/penguin-date'
+const TITLE = '펭귄팅 🐧'
+const DESCRIPTION = '친구가 소개해주는 비공개 소개팅'
+
 export const metadata: Metadata = {
-  title: '펭귄팅',
-  description: '친구들이 서로를 소개해주는 비공개 소개팅 서비스',
+  metadataBase: new URL(SITE_URL),
+  title: TITLE,
+  description: DESCRIPTION,
+  icons: {
+    icon: `${SITE_URL}/favicon.svg`,
+    apple: `${SITE_URL}/favicon.svg`,
+  },
+  openGraph: {
+    type: 'website',
+    siteName: '펭귄팅',
+    title: TITLE,
+    description: DESCRIPTION,
+    url: SITE_URL,
+    locale: 'ko_KR',
+    images: [
+      {
+        url: `${SITE_URL}/og-image.png`,
+        width: 1200,
+        height: 630,
+        alt: '펭귄팅 — 친구가 소개해주는 비공개 소개팅',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: TITLE,
+    description: DESCRIPTION,
+    images: [`${SITE_URL}/og-image.png`],
+  },
 }
 
 export default function RootLayout({
