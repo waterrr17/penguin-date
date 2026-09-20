@@ -7,11 +7,11 @@
 - [ ] **비밀번호가 누구에게나 노출됨** — `profiles` 조회 정책이 `using (true)`이고 `fetchProfiles`/`fetchProfileById`가 `select('*')`라서 `password` 컬럼까지 브라우저로 내려옵니다. anon key는 배포 번들에 들어 있어 누구나 전체 비밀번호를 읽을 수 있습니다.
   - [x] `select`를 필요한 컬럼만 명시하도록 변경 (`password` 제외) — `src/lib/supabase.ts`
   - [x] DB에서도 막기: 컬럼 단위 조회 권한 SQL 작성 — `docs/supabase-migration-hide-password.sql`
-  - [ ] 배포 후 Supabase SQL Editor에서 위 SQL 실행 (⚠️ 코드 배포 → SQL 순서)
+  - [x] 배포 후 Supabase SQL Editor에서 위 SQL 실행 (⚠️ 코드 배포 → SQL 순서)
   - [ ] 비밀번호를 평문 대신 해시로 저장 (`pgcrypto`의 `crypt()` + RPC에서 비교)
 - [ ] **4자리 비밀번호 무차별 대입 가능** — 10,000개 조합이라 RPC를 반복 호출하면 금방 뚫립니다. 시도 횟수 제한(실패 기록 테이블 + 잠금) 또는 6자리 이상으로 변경 검토
 - [x] **닉네임 파싱 버그** — 띄어쓰기가 있는 형용사("호기심 많은" 등)가 잘못 쪼개지던 문제. `splitNickname()`(`src/data/nicknames.ts`)으로 형용사 목록에서 찾아 나누도록 수정
-- [ ] **작업 중인 변경사항 커밋 안 됨** — `docs/supabase-schema.sql` 수정분, `docs/supabase-migration-fix-update-profile.sql` 신규 파일이 git에 올라가 있지 않음
+- [x] **작업 중인 변경사항 커밋 안 됨** — `docs/supabase-schema.sql` 수정분, `docs/supabase-migration-fix-update-profile.sql` 신규 파일이 git에 올라가 있지 않음
 
 ## 🟠 기존 기능 개선
 
@@ -25,7 +25,7 @@
 - [ ] 폼 중간 이탈 시 입력값 유실 → 임시 저장 또는 이탈 경고
 
 ### 프로필 상세 (`/profile`)
-- [ ] 삭제/상태 변경 시 RPC 결과(`'wrong-password'`, `'no-db'`)를 확인하지 않고 성공 처리함 → 결과값 체크
+- [x] 삭제/상태 변경 시 RPC 결과(`'wrong-password'`, `'no-db'`)를 확인하지 않고 성공 처리함 → `reportFailure()`로 결과값 체크
 - [ ] 조회 실패(네트워크 오류)와 "없는 프로필"이 같은 화면으로 표시됨 → 에러 화면 분리 + 다시 시도 버튼
 - [ ] 나이 표시를 연 나이 → 만 나이 기준으로 할지 결정 (`src/lib/age.ts`)
 
@@ -39,7 +39,9 @@
 - [ ] `alert` / `confirm` → 서비스 톤에 맞는 토스트·모달 컴포넌트로 교체
 - [ ] 조사 처리: "{주선자}과"가 받침 없는 이름에도 "과"로 나옴 → 받침 여부로 과/와 선택하는 헬퍼 추가 (`ProfileBubble`, `profile` 페이지)
 - [ ] 헤더·배경 그라데이션이 페이지마다 중복 → 공통 `PageLayout` 컴포넌트로 정리
-- [ ] 파비콘, OG 이미지/메타 태그(카톡 공유 미리보기) 추가
+- [ ] 파비콘, OG 이미지/메타 태그(카톡 공유 미리보기) 추가 — 공유 링크 미리보기에 필요
+- [x] 상세 페이지 공유하기 버튼 — 모바일은 기본 공유 시트(카카오톡 등), 그 외에는 링크 복사 + 토스트 안내
+- [ ] 카카오 JavaScript SDK 연동 검토 — 앱 키 발급 + 도메인 등록 필요 (지금은 공유 시트로 대체)
 - [ ] 커스텀 404 페이지
 
 ### 서비스 접근 · 운영

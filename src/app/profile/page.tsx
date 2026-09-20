@@ -9,6 +9,7 @@ import {
   fetchProfileById,
   setProfileActive,
   verifyProfilePassword,
+  type MutationResult,
 } from '@/lib/supabase'
 import { EDIT_PASSWORD_KEY } from '@/lib/editAuth'
 import { birthYearLabel } from '@/lib/age'
@@ -70,6 +71,14 @@ function ProfileDetail() {
   const [action, setAction] = useState<ManageAction | null>(null)
   const [password, setPassword] = useState('')
   const [processing, setProcessing] = useState(false)
+  // 공유하기 안내 (잠깐 떴다 사라집니다)
+  const [shareToast, setShareToast] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!shareToast) return
+    const timer = setTimeout(() => setShareToast(null), 2000)
+    return () => clearTimeout(timer)
+  }, [shareToast])
 
   useEffect(() => {
     if (!id) {
@@ -97,6 +106,44 @@ function ProfileDetail() {
   const closeModal = () => {
     setAction(null)
     setPassword('')
+  }
+
+  // 공유하기 — 모바일은 기본 공유 시트(카카오톡 등), 그 외에는 링크 복사
+  const handleShare = async () => {
+    const url = window.location.href
+    const text = `${profile?.name ?? ''} 님의 프로필을 확인해 보세요 🐧`
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: '펭귄팅 🐧', text, url })
+        return
+      } catch (err) {
+        // 사용자가 공유 시트를 닫은 경우는 아무 일도 하지 않습니다
+        if (err instanceof Error && err.name === 'AbortError') return
+        // 그 외 실패는 아래 링크 복사로 넘어갑니다
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(url)
+      setShareToast('링크가 복사되었어요 🔗')
+    } catch {
+      setShareToast('링크 복사에 실패했어요. 주소창에서 복사해 주세요')
+    }
+  }
+
+  // RPC 결과가 실패면 이유를 알려주고 false를 돌려줍니다
+  // (성공하지 않았는데 "처리됐다"고 안내하는 일이 없도록)
+  const reportFailure = (result: MutationResult) => {
+    if (result === 'no-db') {
+      alert('아직 DB가 연결되지 않았어요 🐧')
+      return false
+    }
+    if (result === 'wrong-password') {
+      alert('비밀번호가 일치하지 않아요 🐧')
+      return false
+    }
+    return true
   }
 
   // 비밀번호 확인 후 액션 실행
@@ -128,7 +175,8 @@ function ProfileDetail() {
 
       if (action === 'delete') {
         if (!confirm('정말 삭제할까요? 삭제하면 되돌릴 수 없어요 🐧')) return
-        await deleteProfile(profile.id, password)
+        const deleted = await deleteProfile(profile.id, password)
+        if (!reportFailure(deleted)) return
         closeModal()
         alert('프로필이 삭제되었어요')
         router.push('/browse')
@@ -137,7 +185,8 @@ function ProfileDetail() {
 
       // 활성화/비활성화 토글
       const nextActive = !profile.isActive
-      await setProfileActive(profile.id, password, nextActive)
+      const toggled = await setProfileActive(profile.id, password, nextActive)
+      if (!reportFailure(toggled)) return
       setProfile({ ...profile, isActive: nextActive })
       closeModal()
       alert(nextActive ? '프로필을 다시 활성화했어요 🎉' : '프로필을 비활성화했어요 💤')
@@ -258,6 +307,15 @@ function ProfileDetail() {
         </div>
       </Section>
 
+      {/* ── 공유하기 ── */}
+      <button
+        type="button"
+        onClick={handleShare}
+        className="w-full min-h-[44px] flex items-center justify-center gap-1.5 rounded-2xl bg-white border border-peri-200 hover:bg-peri-50 active:scale-[0.98] text-peri-600 text-sm font-semibold transition-all duration-150"
+      >
+        🔗 공유하기
+      </button>
+
       {/* ── 관리 버튼 ── */}
       <div className="flex gap-2">
         <button
@@ -294,6 +352,16 @@ function ProfileDetail() {
       </p>
 
       <div className="h-6" />
+
+      {/* ── 공유하기 안내 토스트 ── */}
+      {shareToast && (
+        <div
+          role="status"
+          className="fixed left-1/2 -translate-x-1/2 bottom-8 z-40 px-4 py-2.5 rounded-full bg-slate-800/90 text-white text-sm font-medium shadow-lg backdrop-blur-sm"
+        >
+          {shareToast}
+        </div>
+      )}
 
       {/* ── 비밀번호 확인 모달 ── */}
       {action && (

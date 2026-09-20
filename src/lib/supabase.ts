@@ -74,7 +74,7 @@ interface ProfileRow {
 // 수정/삭제 폼에서 다루는 프로필 필드 (id, 등록일, 조인 결과, 활성화 여부 제외)
 type ProfileInput = Omit<Profile, 'id' | 'createdAt' | 'matchmakerName' | 'isActive'>
 
-type MutationResult = 'ok' | 'wrong-password' | 'no-db'
+export type MutationResult = 'ok' | 'wrong-password' | 'no-db'
 
 const toProfile = (row: ProfileRow): Profile => ({
   id: row.id,
