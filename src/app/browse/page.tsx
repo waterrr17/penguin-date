@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import MyPenguinPicker from "@/components/MyPenguinPicker";
 import PenguinField from "@/components/PenguinField";
 import { SAMPLE_PROFILES } from "@/data/sampleProfiles";
+import { MY_PROFILE_KEY } from "@/lib/matching";
 import { fetchProfiles } from "@/lib/supabase";
 import type { Profile } from "@/types";
 
@@ -14,6 +16,18 @@ export default function BrowsePage() {
   const [loading, setLoading] = useState(true);
   const [isSample, setIsSample] = useState(false);
   const [gender, setGender] = useState<GenderFilter>("all");
+  // 궁합을 보려면 "내가 누구인지" 알아야 합니다 (기기에만 저장)
+  const [myId, setMyId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMyId(localStorage.getItem(MY_PROFILE_KEY));
+  }, []);
+
+  const selectMe = (id: string | null) => {
+    setMyId(id);
+    if (id) localStorage.setItem(MY_PROFILE_KEY, id);
+    else localStorage.removeItem(MY_PROFILE_KEY);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -40,6 +54,12 @@ export default function BrowsePage() {
   const filtered = useMemo(
     () => profiles.filter((p) => gender === "all" || p.gender === gender),
     [profiles, gender],
+  );
+
+  // 고른 내 펭귄 (목록에서 사라졌으면 null)
+  const me = useMemo(
+    () => profiles.find((p) => p.id === myId) ?? null,
+    [profiles, myId],
   );
 
   // 인원 수에는 비활성 프로필을 세지 않습니다
@@ -107,6 +127,11 @@ export default function BrowsePage() {
             {activeCount}마리의 외로운 펭귄이 돌아다니고 있어요 🐧
           </p>
         )}
+
+        {/* 내 펭귄 고르기 — 고르면 궁합 표시 */}
+        {!loading && profiles.length > 0 && (
+          <MyPenguinPicker profiles={profiles} me={me} onSelect={selectMe} />
+        )}
       </div>
 
       {/* ── 펭귄들이 돌아다니는 화면 ── */}
@@ -116,7 +141,7 @@ export default function BrowsePage() {
           <p className="text-sm">펭귄들을 불러오는 중...</p>
         </div>
       ) : (
-        <PenguinField profiles={filtered} />
+        <PenguinField profiles={filtered} me={me} />
       )}
     </main>
   );

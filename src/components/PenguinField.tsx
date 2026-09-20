@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import PenguinAvatar from '@/components/PenguinAvatar'
 import ProfileBubble from '@/components/ProfileBubble'
 import { profileLook } from '@/lib/profileLook'
+import { compatibility } from '@/lib/matching'
 import type { Profile } from '@/types'
 
 const PENGUIN = 64 // 펭귄 한 마리 크기
@@ -34,7 +35,14 @@ const sleepSpot = (slot: number, maxY: number) => ({
   y: Math.max(0, maxY - 10 - Math.floor(slot / SLEEP_COLS) * (CELL_H + 2)),
 })
 
-export default function PenguinField({ profiles }: { profiles: Profile[] }) {
+export default function PenguinField({
+  profiles,
+  me = null,
+}: {
+  profiles: Profile[]
+  /** 내가 고른 펭귄 — 있으면 궁합이 맞는 펭귄에 ✨ 를 붙입니다 */
+  me?: Profile | null
+}) {
   const fieldRef = useRef<HTMLDivElement>(null)
   const nodes = useRef(new Map<string, HTMLElement>())
   const motions = useRef(new Map<string, Motion>())
@@ -327,6 +335,7 @@ export default function PenguinField({ profiles }: { profiles: Profile[] }) {
         size.w > 0 &&
         withSlot.map(({ profile, slot }) => {
           const sleeping = !profile.isActive
+          const matched = me ? compatibility(me, profile).isMatch : false
           return (
             <button
               key={profile.id}
@@ -341,12 +350,14 @@ export default function PenguinField({ profiles }: { profiles: Profile[] }) {
             >
               {/* 머리 위 닉네임 */}
               <span
-                className={`text-[10px] font-semibold whitespace-nowrap leading-none px-1.5 py-0.5 rounded-full bg-white/70 ${
-                  sleeping ? 'text-slate-400' : 'text-slate-600'
+                className={`text-[10px] font-semibold whitespace-nowrap leading-none px-1.5 py-0.5 rounded-full ${
+                  me?.id === profile.id
+                    ? 'bg-peri-400 text-white'
+                    : `bg-white/70 ${sleeping ? 'text-slate-400' : 'text-slate-600'}`
                 }`}
                 style={{ height: LABEL }}
               >
-                {profile.name}
+                {me?.id === profile.id ? '나' : profile.name}
               </span>
 
               <div className="relative">
@@ -360,6 +371,16 @@ export default function PenguinField({ profiles }: { profiles: Profile[] }) {
                       : ''
                   }`}
                 />
+                {/* 이상형 조건이 서로 맞으면 ✨ */}
+                {matched && (
+                  <span
+                    aria-hidden
+                    className="animate-sparkle absolute -top-1 -left-1 text-sm pointer-events-none"
+                  >
+                    ✨
+                  </span>
+                )}
+
                 {/* 쉬는 중이면 머리맡에 💤 */}
                 {sleeping && (
                   <span
@@ -393,7 +414,7 @@ export default function PenguinField({ profiles }: { profiles: Profile[] }) {
             style={bubble.style}
           >
             <div className="relative">
-              <ProfileBubble profile={selected} />
+              <ProfileBubble profile={selected} me={me} />
               {/* 펭귄을 가리키는 꼬리 */}
               {bubble.showTail && (
                 <span
