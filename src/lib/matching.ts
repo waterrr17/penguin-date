@@ -1,7 +1,37 @@
 import type { Profile } from '@/types'
 
 // 내가 고른 펭귄은 기기에만 저장합니다 (아직 로그인 개념이 없습니다)
+// 궁합(✨)을 보는 데는 신원 확인이 필요 없어서 이 값만으로 충분합니다
 export const MY_PROFILE_KEY = 'penguin-my-profile'
+
+// 관심 보내기처럼 실제로 "나"임을 증명해야 하는 동작에는 비밀번호가 필요합니다.
+// 매번 묻지 않도록 확인된 비밀번호를 탭을 여는 동안만 sessionStorage 에 둡니다
+// (관리자 페이지와 같은 패턴 — 새로고침하면 다시 확인합니다)
+const MY_SESSION_KEY = 'penguin-my-session'
+
+interface MySession {
+  id: string
+  password: string
+}
+
+export function getMySession(): MySession | null {
+  try {
+    const raw = sessionStorage.getItem(MY_SESSION_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as MySession
+    return parsed.id && parsed.password ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+export function setMySession(id: string, password: string) {
+  sessionStorage.setItem(MY_SESSION_KEY, JSON.stringify({ id, password }))
+}
+
+export function clearMySession() {
+  sessionStorage.removeItem(MY_SESSION_KEY)
+}
 
 export interface Compatibility {
   /** 지정된 조건이 모두 양방향으로 맞는지 */

@@ -1,6 +1,8 @@
 import Link from 'next/link'
+import LikeButton from '@/components/LikeButton'
 import { birthYearLabel } from '@/lib/age'
 import { compatibility } from '@/lib/matching'
+import type { SendLikeResult } from '@/lib/likes'
 import type { Profile } from '@/types'
 
 const GENDER_BADGE = {
@@ -8,16 +10,32 @@ const GENDER_BADGE = {
   female: 'bg-rose-100 text-rose-400',
 } as const
 
+interface Props {
+  profile: Profile
+  me?: Profile | null
+  /** 내가 이미 관심을 보낸 상대 id 목록 */
+  sentLikes?: Set<string>
+  /** 매칭이 성사된 상대 id 목록 */
+  matches?: Set<string>
+  /** 관심 보내기 결과를 부모에게 알려줍니다 (목록 갱신용) */
+  onLikeSent?: (toId: string, result: SendLikeResult) => void
+}
+
 // 펭귄을 터치했을 때 머리 위에 뜨는 말풍선.
 // 기존 프로필 카드 디자인을 그대로 쓰되 화면에 맞게 작게 줄였습니다
 export default function ProfileBubble({
   profile,
   me = null,
-}: {
-  profile: Profile
-  me?: Profile | null
-}) {
+  sentLikes,
+  matches,
+  onLikeSent,
+}: Props) {
   const match = me ? compatibility(me, profile) : null
+  const canLike =
+    !!me &&
+    me.id !== profile.id &&
+    me.gender !== profile.gender &&
+    profile.isActive
 
   return (
     <div className="rounded-2xl bg-white border border-peri-100 shadow-lg shadow-peri-200/50 p-3 flex flex-col gap-2">
@@ -75,6 +93,18 @@ export default function ProfileBubble({
             과 {profile.relationship || '...'}
           </span>
         </div>
+      )}
+
+      {/* 관심 보내기 — 내 펭귄을 고른 상태에서, 이성이고, 상대가 활동 중일 때만 */}
+      {canLike && me && (
+        <LikeButton
+          me={me}
+          profile={profile}
+          liked={sentLikes?.has(profile.id) ?? false}
+          matched={matches?.has(profile.id) ?? false}
+          onResult={(result) => onLikeSent?.(profile.id, result)}
+          className="min-h-[36px] rounded-xl text-xs font-semibold"
+        />
       )}
 
       <Link

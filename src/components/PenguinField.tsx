@@ -5,6 +5,7 @@ import PenguinAvatar from '@/components/PenguinAvatar'
 import ProfileBubble from '@/components/ProfileBubble'
 import { profileLook } from '@/lib/profileLook'
 import { compatibility } from '@/lib/matching'
+import type { SendLikeResult } from '@/lib/likes'
 import type { Profile } from '@/types'
 
 const PENGUIN = 64 // 펭귄 한 마리 크기
@@ -38,10 +39,16 @@ const sleepSpot = (slot: number, maxY: number) => ({
 export default function PenguinField({
   profiles,
   me = null,
+  sentLikes,
+  matches,
+  onLikeSent,
 }: {
   profiles: Profile[]
   /** 내가 고른 펭귄 — 있으면 궁합이 맞는 펭귄에 ✨ 를 붙입니다 */
   me?: Profile | null
+  sentLikes?: Set<string>
+  matches?: Set<string>
+  onLikeSent?: (toId: string, result: SendLikeResult) => void
 }) {
   const fieldRef = useRef<HTMLDivElement>(null)
   const nodes = useRef(new Map<string, HTMLElement>())
@@ -414,7 +421,13 @@ export default function PenguinField({
             style={bubble.style}
           >
             <div className="relative">
-              <ProfileBubble profile={selected} me={me} />
+              <ProfileBubble
+                profile={selected}
+                me={me}
+                sentLikes={sentLikes}
+                matches={matches}
+                onLikeSent={onLikeSent}
+              />
               {/* 펭귄을 가리키는 꼬리 */}
               {bubble.showTail && (
                 <span

@@ -5,7 +5,12 @@ import Link from "next/link";
 import MyPenguinPicker from "@/components/MyPenguinPicker";
 import PenguinField from "@/components/PenguinField";
 import { SAMPLE_PROFILES } from "@/data/sampleProfiles";
-import { MY_PROFILE_KEY } from "@/lib/matching";
+import { MY_PROFILE_KEY, getMySession } from "@/lib/matching";
+import {
+  fetchLikesSent,
+  fetchMyMatches,
+  type SendLikeResult,
+} from "@/lib/likes";
 import { fetchProfiles } from "@/lib/supabase";
 import type { Profile } from "@/types";
 
@@ -27,6 +32,51 @@ export default function BrowsePage() {
     setMyId(id);
     if (id) localStorage.setItem(MY_PROFILE_KEY, id);
     else localStorage.removeItem(MY_PROFILE_KEY);
+  };
+
+  // 내가 보낸 관심 / 매칭 성사 목록 (비밀번호로 확인된 경우에만 불러옵니다)
+  const [sentLikes, setSentLikes] = useState<Set<string>>(new Set());
+  const [matches, setMatches] = useState<Set<string>>(new Set());
+
+  // 이미 비밀번호를 확인한 적 있는 펭귄이면(같은 탭 안에서) 목록을 미리 불러옵니다.
+  // 아직 확인 전이면 조용히 넘어가고, 관심 보내기를 처음 누를 때 물어봅니다
+  useEffect(() => {
+    if (!myId) {
+      setSentLikes(new Set());
+      setMatches(new Set());
+      return;
+    }
+    const session = getMySession();
+    if (!session || session.id !== myId) return;
+
+    let cancelled = false;
+    Promise.all([
+      fetchLikesSent(myId, session.password),
+      fetchMyMatches(myId, session.password),
+    ])
+      .then(([sent, matched]) => {
+        if (cancelled) return;
+        if (sent) setSentLikes(new Set(sent));
+        if (matched) setMatches(new Set(matched));
+      })
+      .catch(() => {
+        // 비밀번호가 바뀌었거나 문제가 있으면 다음 관심 보내기에서 다시 묻습니다
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [myId]);
+
+  const handleLikeSent = (toId: string, result: SendLikeResult) => {
+    if (result === "wrong-password" || result === "no-db") return;
+
+    setSentLikes((prev) => new Set(prev).add(toId));
+    if (result === "matched") {
+      setMatches((prev) => new Set(prev).add(toId));
+      alert("매칭이 성사됐어요! 🎉 서로 관심을 보냈어요");
+    } else if (result === "liked") {
+      alert("관심을 보냈어요 💌 상대도 관심을 보내면 매칭돼요");
+    }
   };
 
   useEffect(() => {
@@ -141,7 +191,13 @@ export default function BrowsePage() {
           <p className="text-sm">펭귄들을 불러오는 중...</p>
         </div>
       ) : (
-        <PenguinField profiles={filtered} me={me} />
+        <PenguinField
+          profiles={filtered}
+          me={me}
+          sentLikes={sentLikes}
+          matches={matches}
+          onLikeSent={handleLikeSent}
+        />
       )}
     </main>
   );

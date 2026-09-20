@@ -14,7 +14,10 @@ import {
 import { EDIT_PASSWORD_KEY } from '@/lib/editAuth'
 import { birthYearLabel } from '@/lib/age'
 import { profileLook } from '@/lib/profileLook'
+import { MY_PROFILE_KEY, compatibility } from '@/lib/matching'
+import type { SendLikeResult } from '@/lib/likes'
 import PenguinAvatar from '@/components/PenguinAvatar'
+import LikeButton from '@/components/LikeButton'
 import type { Profile } from '@/types'
 
 type ManageAction = 'edit' | 'delete' | 'toggle'
@@ -74,6 +77,11 @@ function ProfileDetail() {
   // 공유하기 안내 (잠깐 떴다 사라집니다)
   const [shareToast, setShareToast] = useState<string | null>(null)
 
+  // "내 펭귄" — 이 사람에게 관심을 보낼 수 있는지 판단하는 데 씁니다
+  const [me, setMe] = useState<Profile | null>(null)
+  const [liked, setLiked] = useState(false)
+  const [matched, setMatched] = useState(false)
+
   useEffect(() => {
     if (!shareToast) return
     const timer = setTimeout(() => setShareToast(null), 2000)
@@ -98,6 +106,21 @@ function ProfileDetail() {
       .finally(() => {
         if (!cancelled) setLoading(false)
       })
+    return () => {
+      cancelled = true
+    }
+  }, [id])
+
+  // 둘러보기에서 고른 "내 펭귄"을 불러와 관심 보내기 버튼을 보여줄지 판단합니다
+  useEffect(() => {
+    const myId = localStorage.getItem(MY_PROFILE_KEY)
+    if (!myId || myId === id) return
+    let cancelled = false
+    fetchProfileById(myId)
+      .then(data => {
+        if (!cancelled) setMe(data ?? SAMPLE_PROFILES.find(p => p.id === myId) ?? null)
+      })
+      .catch(() => {})
     return () => {
       cancelled = true
     }
@@ -306,6 +329,40 @@ function ProfileDetail() {
           </p>
         </div>
       </Section>
+
+      {/* ── 이상형 궁합 (둘러보기에서 내 펭귄을 고른 경우) ── */}
+      {me && compatibility(me, profile).isMatch && (
+        <div className="flex items-center gap-1.5 text-xs text-peri-600 bg-peri-50 border border-peri-100 rounded-2xl px-3.5 py-3">
+          <span>✨</span>
+          <span>
+            <b className="font-semibold">
+              {compatibility(me, profile).reasons.join('·')}
+            </b>{' '}
+            조건이 서로 맞아요
+          </span>
+        </div>
+      )}
+
+      {/* ── 관심 보내기 — 이성이고 상대가 활동 중일 때만 ── */}
+      {me && me.id !== profile.id && me.gender !== profile.gender && profile.isActive && (
+        <LikeButton
+          me={me}
+          profile={profile}
+          liked={liked}
+          matched={matched}
+          onResult={result => {
+            if (result === 'wrong-password' || result === 'no-db') return
+            setLiked(true)
+            if (result === 'matched') {
+              setMatched(true)
+              alert('매칭이 성사됐어요! 🎉 서로 관심을 보냈어요')
+            } else if (result === 'liked') {
+              alert('관심을 보냈어요 💌 상대도 관심을 보내면 매칭돼요')
+            }
+          }}
+          className="w-full min-h-[44px] rounded-2xl text-sm font-semibold"
+        />
+      )}
 
       {/* ── 공유하기 ── */}
       <button

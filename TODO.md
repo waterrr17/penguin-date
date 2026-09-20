@@ -73,7 +73,8 @@
 ### 매칭
 - [ ] 매칭 DB 설계 — `likes`(보낸 사람, 받는 사람), `matches`(두 프로필, 상태, 생성일) 테이블 + RLS
 - [x] 이상형 추천 (1단계) — 내 펭귄을 고르면 이상형 조건(나이·키)이 **양방향으로** 맞는 펭귄에 ✨ 표시. 조건이 비어 있으면 '상관없음'으로 통과, 이성끼리만 계산. DB 변경 없이 공개 데이터로 화면에서 계산 (`src/lib/matching.ts`)
-- [ ] 매칭 2단계 — 관심 보내기 → 상호 관심 시 성사. `likes` / `matches` 테이블 + RPC 필요. **내 펭귄 고르기에 비밀번호 확인을 붙여야 함** (지금은 신원 확인 없이 고르기만 함)
+- [x] 매칭 2단계 — 관심 보내기 → 상호 관심 시 성사. `likes`/`matches` 테이블 + RPC(`send_like`/`fetch_likes_sent`/`fetch_likes_received`/`fetch_my_matches`) 추가 — `docs/supabase-migration-likes.sql` 실행 필요.
+  관심 보내기를 처음 누를 때만 비밀번호를 물어보고(`LikeButton`), 성공하면 세션에 기억해 둡니다(`src/lib/matching.ts`의 `getMySession`/`setMySession`, sessionStorage). 이성에게만·본인 제외·상대 활동 중일 때만 버튼이 보이고, DB에서도 같은 조건을 다시 검사합니다. 말풍선과 상세 페이지 양쪽에 붙였습니다 (`LikeButton` 공용 컴포넌트)
 - [ ] 매칭 3단계 — 주선자가 성사된 매칭을 확인하고 연락처 전달 (관리자/주선자 화면)
 - [ ] 이상형에 '찾는 성별' 필드가 없어 현재는 이성끼리로 고정됨 — 필요해지면 추가
 - [ ] 관심 보내기 — 서로 관심을 보내면 매칭 성사
