@@ -14,8 +14,8 @@ import {
 import { EDIT_PASSWORD_KEY } from '@/lib/editAuth'
 import { birthYearLabel } from '@/lib/age'
 import { profileLook } from '@/lib/profileLook'
-import { MY_PROFILE_KEY, compatibility } from '@/lib/matching'
-import type { SendLikeResult } from '@/lib/likes'
+import { MY_PROFILE_KEY, getMySession, compatibility } from '@/lib/matching'
+import { fetchLikesSent, fetchMyMatches, type SendLikeResult } from '@/lib/likes'
 import PenguinAvatar from '@/components/PenguinAvatar'
 import LikeButton from '@/components/LikeButton'
 import type { Profile } from '@/types'
@@ -125,6 +125,31 @@ function ProfileDetail() {
       cancelled = true
     }
   }, [id])
+
+  // 이미 관심을 보냈거나 매칭된 상대라면, 버튼이 "관심 보내기"로 잘못 보이지 않도록
+  // 비밀번호를 확인한 적 있는 경우에 한해 미리 상태를 가져와 둡니다
+  useEffect(() => {
+    if (!me || !id) return
+    const session = getMySession()
+    if (!session || session.id !== me.id) return
+
+    let cancelled = false
+    Promise.all([
+      fetchLikesSent(me.id, session.password),
+      fetchMyMatches(me.id, session.password),
+    ])
+      .then(([sent, matches]) => {
+        if (cancelled) return
+        if (sent?.includes(id)) setLiked(true)
+        if (matches?.includes(id)) setMatched(true)
+      })
+      .catch(() => {
+        // 비밀번호가 바뀌었다면 다음 관심 보내기에서 다시 묻습니다
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [me, id])
 
   const closeModal = () => {
     setAction(null)
