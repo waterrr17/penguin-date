@@ -10,14 +10,18 @@ import {
   addMatchmaker,
   adminSetProfileActive,
   deleteMatchmaker,
+  fetchAdminMatches,
   fetchMatchmakerStats,
   renameMatchmaker,
+  setAdminMatchStatus,
   verifyAdminPassword,
+  type AdminMatch,
   type MatchmakerStat,
+  type MatchSide,
 } from '@/lib/admin'
 import type { Profile } from '@/types'
 
-type Tab = 'matchmakers' | 'profiles'
+type Tab = 'matchmakers' | 'profiles' | 'matches'
 
 export default function AdminPage() {
   const [password, setPassword] = useState<string | null>(null)
@@ -148,13 +152,14 @@ function AdminPanel({ password }: { password: string }) {
         <TabButton active={tab === 'profiles'} onClick={() => setTab('profiles')}>
           사용자 목록
         </TabButton>
+        <TabButton active={tab === 'matches'} onClick={() => setTab('matches')}>
+          매칭 현황
+        </TabButton>
       </div>
 
-      {tab === 'matchmakers' ? (
-        <MatchmakerSection password={password} />
-      ) : (
-        <ProfileSection password={password} />
-      )}
+      {tab === 'matchmakers' && <MatchmakerSection password={password} />}
+      {tab === 'profiles' && <ProfileSection password={password} />}
+      {tab === 'matches' && <MatchSection password={password} />}
     </div>
   )
 }
@@ -465,6 +470,117 @@ function ProfileSection({ password }: { password: string }) {
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+/* ── 매칭 현황 ── */
+
+function MatchSection({ password }: { password: string }) {
+  const [list, setList] = useState<AdminMatch[] | null>(null)
+  const [busy, setBusy] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const load = useCallback(async () => {
+    try {
+      setError(null)
+      setList(await fetchAdminMatches(password))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '불러오지 못했어요')
+    }
+  }, [password])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  const markIntroduced = async (matchId: string) => {
+    if (busy) return
+    setBusy(matchId)
+    setError(null)
+    try {
+      await setAdminMatchStatus(password, matchId, 'introduced')
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '처리 중 문제가 생겼어요')
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  if (list === null) {
+    return <p className="text-sm text-slate-500 text-center py-8">불러오는 중...</p>
+  }
+
+  const pendingCount = list.filter((m) => m.status === 'matched').length
+
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-xs text-slate-500">
+        전체 {list.length}건 · 연결 대기 {pendingCount}건
+      </p>
+
+      {error && (
+        <p className="text-xs text-rose-500 bg-rose-50 border border-rose-100 rounded-xl px-3 py-2">
+          {error}
+        </p>
+      )}
+
+      {list.length === 0 ? (
+        <p className="text-sm text-slate-500 text-center py-8">
+          아직 성사된 매칭이 없어요
+        </p>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {list.map((m) => (
+            <div
+              key={m.id}
+              className="bg-white rounded-2xl border border-peri-100 p-3 flex flex-col gap-3"
+            >
+              <div className="flex items-center justify-center gap-3">
+                <MatchSideCard side={m.a} />
+                <span className="text-rose-300 text-lg shrink-0">💕</span>
+                <MatchSideCard side={m.b} />
+              </div>
+
+              <button
+                type="button"
+                disabled={m.status === 'introduced' || busy === m.id}
+                onClick={() => markIntroduced(m.id)}
+                className={`min-h-[40px] rounded-xl text-xs font-semibold transition-all duration-150 disabled:pointer-events-none ${
+                  m.status === 'introduced'
+                    ? 'bg-amber-50 text-amber-600'
+                    : 'bg-peri-400 hover:bg-peri-500 active:scale-[0.98] text-white'
+                }`}
+              >
+                {m.status === 'introduced'
+                  ? '연결 완료 ✓'
+                  : busy === m.id
+                    ? '처리 중...'
+                    : '연결 완료로 표시'}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function MatchSideCard({ side }: { side: MatchSide }) {
+  return (
+    <div className="flex-1 min-w-0 flex flex-col items-center gap-1 text-center">
+      <PenguinAvatar
+        look={side.penguinLook}
+        size={40}
+        className={side.isActive ? '' : 'opacity-60 grayscale'}
+      />
+      <p className="text-xs font-semibold text-slate-700 truncate w-full">
+        {side.name}
+      </p>
+      <p className="text-[10px] text-slate-400 truncate w-full">
+        {side.matchmakerName ? `주선자: ${side.matchmakerName}` : '주선자 없음'}
+      </p>
     </div>
   )
 }

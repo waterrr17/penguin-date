@@ -232,7 +232,7 @@ create table public.matches (
   id uuid primary key default gen_random_uuid(),
   profile_a uuid not null references public.profiles (id) on delete cascade,
   profile_b uuid not null references public.profiles (id) on delete cascade,
-  status text not null default 'connected', -- 3단계(주선자 연결)에서 상태를 더 씁니다
+  status text not null default 'matched' check (status in ('matched', 'introduced')),
   created_at timestamptz not null default now(),
   unique (profile_a, profile_b),
   check (profile_a < profile_b)
@@ -340,4 +340,172 @@ begin
     select case when profile_a = p_id then profile_b else profile_a end
     from matches
     where profile_a = p_id or profile_b = p_id;
+end $$;
+
+-- ── 관리자 화면(/admin) ──────────────────────────────────
+-- 정적 배포라 anon key 가 브라우저 번들에 그대로 들어갑니다.
+-- 화면에서 비밀번호를 물어보는 것만으로는 방어가 안 되므로, 실제 방어는
+-- 전부 이 섹션의 RPC 안에서 이뤄집니다 (테이블 직접 수정 권한은 주지 않음)
+
+-- 👇👇👇 실행 전에 원하는 비밀번호로 바꾸세요 (한 번 실행하면 해시로만 남아 다시 못 봅니다) 👇👇👇
+create table public.admin_config (
+  id boolean primary key default true check (id),
+  password text not null,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.admin_config enable row level security;
+revoke all on public.admin_config from anon, authenticated;
+
+insert into public.admin_config (id, password)
+values (true, crypt('여기에_원하는_관리자_비밀번호', gen_salt('bf')));
+-- 👆👆👆 실행 전에 원하는 비밀번호로 바꾸세요 👆👆👆
+
+create or replace function public.verify_admin_password(p_password text)
+returns boolean
+language sql security definer set search_path = public, extensions as $$
+  select exists (
+    select 1 from admin_config
+    where id = true and password = crypt(p_password, password)
+  );
+$$;
+
+-- 내부용: 비밀번호가 틀리면 예외를 던져 아래 함수들을 즉시 중단시킵니다
+create or replace function public.assert_admin(p_password text)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if not public.verify_admin_password(p_password) then
+    raise exception '관리자 비밀번호가 일치하지 않습니다' using errcode = '28000';
+  end if;
+end $$;
+
+revoke execute on function public.assert_admin(text) from public, anon, authenticated;
+
+-- 주선자 관리
+create or replace function public.admin_add_matchmaker(p_password text, p_name text)
+returns uuid
+language plpgsql security definer set search_path = public, extensions as $$
+declare new_id uuid;
+begin
+  perform public.assert_admin(p_password);
+
+  if p_name is null or btrim(p_name) = '' then
+    raise exception '주선자 이름을 입력해 주세요' using errcode = '22000';
+  end if;
+
+  insert into matchmakers (name) values (btrim(p_name))
+  returning id into new_id;
+  return new_id;
+end $$;
+
+create or replace function public.admin_rename_matchmaker(p_password text, p_id uuid, p_name text)
+returns boolean
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  perform public.assert_admin(p_password);
+
+  if p_name is null or btrim(p_name) = '' then
+    raise exception '주선자 이름을 입력해 주세요' using errcode = '22000';
+  end if;
+
+  update matchmakers set name = btrim(p_name) where id = p_id;
+  return found;
+end $$;
+
+create or replace function public.admin_delete_matchmaker(p_password text, p_id uuid)
+returns boolean
+language plpgsql security definer set search_path = public, extensions as $$
+declare in_use integer;
+begin
+  perform public.assert_admin(p_password);
+
+  -- 이 주선자를 쓰고 있는 프로필이 있으면 지우지 않습니다
+  select count(*) into in_use from profiles where matchmaker_id = p_id;
+  if in_use > 0 then
+    raise exception '이 주선자가 연결된 프로필이 %건 있어 삭제할 수 없어요', in_use
+      using errcode = '23503';
+  end if;
+
+  delete from matchmakers where id = p_id;
+  return found;
+end $$;
+
+-- 프로필 활성화/비활성화 (관리자 권한 — 본인 비밀번호 없이)
+create or replace function public.admin_set_profile_active(
+  p_password text, p_id uuid, p_active boolean
+) returns boolean
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  perform public.assert_admin(p_password);
+  update profiles set is_active = p_active where id = p_id;
+  return found;
+end $$;
+
+-- 주선자별 연결된 프로필 수 (관리 화면 표시용)
+create or replace function public.admin_matchmaker_stats(p_password text)
+returns table (id uuid, name text, profile_count bigint)
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  perform public.assert_admin(p_password);
+  return query
+    select m.id, m.name, count(p.id)
+    from matchmakers m
+    left join profiles p on p.matchmaker_id = m.id
+    group by m.id, m.name
+    order by m.name;
+end $$;
+
+-- 매칭 전체 목록 (관리자용) — 양쪽 프로필 정보 + 각자의 주선자 이름
+create or replace function public.admin_list_matches(p_password text)
+returns table (
+  match_id uuid,
+  status text,
+  created_at timestamptz,
+  a_id uuid,
+  a_name text,
+  a_gender text,
+  a_birth_year integer,
+  a_is_active boolean,
+  a_penguin_look jsonb,
+  a_matchmaker_name text,
+  b_id uuid,
+  b_name text,
+  b_gender text,
+  b_birth_year integer,
+  b_is_active boolean,
+  b_penguin_look jsonb,
+  b_matchmaker_name text
+)
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  perform public.assert_admin(p_password);
+
+  return query
+    select
+      m.id, m.status, m.created_at,
+      pa.id, pa.name, pa.gender, pa.birth_year, pa.is_active, pa.penguin_look, ma.name,
+      pb.id, pb.name, pb.gender, pb.birth_year, pb.is_active, pb.penguin_look, mb.name
+    from matches m
+    join profiles pa on pa.id = m.profile_a
+    join profiles pb on pb.id = m.profile_b
+    left join matchmakers ma on ma.id = pa.matchmaker_id
+    left join matchmakers mb on mb.id = pb.matchmaker_id
+    order by m.created_at desc;
+end $$;
+
+-- 매칭 상태 변경 (연결 완료로 표시)
+create or replace function public.admin_set_match_status(
+  p_password text, p_match_id uuid, p_status text
+) returns boolean
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  perform public.assert_admin(p_password);
+
+  if p_status not in ('matched', 'introduced') then
+    raise exception '알 수 없는 상태예요: %', p_status using errcode = '22000';
+  end if;
+
+  update matches set status = p_status where id = p_match_id;
+  return found;
 end $$;
