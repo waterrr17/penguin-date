@@ -49,7 +49,7 @@ export default function AdminPage() {
             onClick={signOut}
             className="min-h-[36px] px-3 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition-colors"
           >
-            잠그기
+            나가기
           </button>
         )}
       </header>
