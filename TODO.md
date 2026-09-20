@@ -76,6 +76,7 @@
 - [x] 매칭 2단계 — 관심 보내기 → 상호 관심 시 성사. `likes`/`matches` 테이블 + RPC(`send_like`/`fetch_likes_sent`/`fetch_likes_received`/`fetch_my_matches`) 추가 — `docs/supabase-migration-likes.sql` 실행 필요.
   관심 보내기를 처음 누를 때만 비밀번호를 물어보고(`LikeButton`), 성공하면 세션에 기억해 둡니다(`src/lib/matching.ts`의 `getMySession`/`setMySession`, sessionStorage). 이성에게만·본인 제외·상대 활동 중일 때만 버튼이 보이고, DB에서도 같은 조건을 다시 검사합니다. 말풍선과 상세 페이지 양쪽에 붙였습니다 (`LikeButton` 공용 컴포넌트)
 - [x] 매칭 3단계 — 관리자(`/admin`)의 "매칭 현황" 탭에서 성사된 매칭(양쪽 프로필 + 주선자 이름)을 확인하고, 오프라인으로 연락처를 전달한 뒤 "연결 완료로 표시" 처리. 주선자 로그인은 아직 없어 관리자가 대신 확인 — `docs/supabase-migration-admin-matches.sql` 실행 필요 (`admin_list_matches`/`admin_set_match_status` RPC 추가, `matches.status`를 `'matched'`/`'introduced'`로 정리)
+  배포 확인 완료 — 실제 배포 사이트(GitHub Pages)에서 테스트 프로필로 매칭 성사 → 관리자 화면에서 양쪽 주선자 이름 정상 표시 → 연결 완료 표시 → 새로고침 후에도 상태 유지까지 확인. 테스트 데이터는 정리함
 - [ ] 이상형에 '찾는 성별' 필드가 없어 현재는 이성끼리로 고정됨 — 필요해지면 추가
 - [x] 주선자 연결 — 매칭 3단계로 구현 (위 항목 참고, 앱에 연락처 공개 안 함)
 - [ ] 주선자 추천 — 주선자가 두 사람을 골라 제안, 양쪽 수락 시 성사
