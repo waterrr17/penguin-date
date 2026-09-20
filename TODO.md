@@ -2,14 +2,13 @@
 
 코드 전체를 훑어보고 정리한 개선 목록입니다. 새 기능은 확인 후 아래 "추가 기능" 섹션에 이어서 적습니다.
 
-## 🔴 긴급 (보안 · 버그)
+## 🔴 긴급 (보안 · 버그) — 모두 완료 ✅
 
-- [ ] **비밀번호가 누구에게나 노출됨** — `profiles` 조회 정책이 `using (true)`이고 `fetchProfiles`/`fetchProfileById`가 `select('*')`라서 `password` 컬럼까지 브라우저로 내려옵니다. anon key는 배포 번들에 들어 있어 누구나 전체 비밀번호를 읽을 수 있습니다.
+- [x] **비밀번호가 누구에게나 노출됨** — `profiles` 조회 정책이 `using (true)`이고 `fetchProfiles`/`fetchProfileById`가 `select('*')`라서 `password` 컬럼까지 브라우저로 내려옵니다. anon key는 배포 번들에 들어 있어 누구나 전체 비밀번호를 읽을 수 있습니다.
   - [x] `select`를 필요한 컬럼만 명시하도록 변경 (`password` 제외) — `src/lib/supabase.ts`
   - [x] DB에서도 막기: 컬럼 단위 조회 권한 SQL 작성 — `docs/supabase-migration-hide-password.sql`
   - [x] 배포 후 Supabase SQL Editor에서 위 SQL 실행 (⚠️ 코드 배포 → SQL 순서)
   - [x] 비밀번호를 평문 대신 해시로 저장 (`pgcrypto` bcrypt + 트리거 자동 해시) — `docs/supabase-migration-hash-password.sql`
-- [ ] **4자리 비밀번호 무차별 대입 가능** — 10,000개 조합이라 RPC를 반복 호출하면 금방 뚫립니다. 시도 횟수 제한(실패 기록 테이블 + 잠금) 또는 6자리 이상으로 변경 검토
 - [x] **닉네임 파싱 버그** — 띄어쓰기가 있는 형용사("호기심 많은" 등)가 잘못 쪼개지던 문제. `splitNickname()`(`src/data/nicknames.ts`)으로 형용사 목록에서 찾아 나누도록 수정
 - [x] **작업 중인 변경사항 커밋 안 됨** — `docs/supabase-schema.sql` 수정분, `docs/supabase-migration-fix-update-profile.sql` 신규 파일이 git에 올라가 있지 않음
 
