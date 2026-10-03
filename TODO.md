@@ -36,7 +36,7 @@
 
 ### 랜딩 · 공통 UI/UX
 - [x] 홈을 랜딩답게 — 펭귄 일러스트, 이용 방법 3단계, 활성 펭귄 수
-- [ ] `alert` / `confirm` → 서비스 톤에 맞는 토스트·모달 컴포넌트로 교체
+- [x] `alert` / `confirm` → 서비스 톤에 맞는 토스트·모달 컴포넌트로 교체 — `toast()`(`src/components/common/Toast.tsx`), `confirmDialog()`(`src/components/common/ConfirmDialog.tsx`), `layout.tsx`에 마운트. register/browse/profile/admin 전체 교체 및 배포 확인 완료
 - [ ] 조사 처리: "{주선자}과"가 받침 없는 이름에도 "과"로 나옴 → 받침 여부로 과/와 선택하는 헬퍼 추가 (`ProfileBubble`, `profile` 페이지)
 - [ ] 헤더·배경 그라데이션이 페이지마다 중복 → 공통 `PageLayout` 컴포넌트로 정리
 - [x] 파비콘, OG 이미지/메타 태그(카톡 공유 미리보기) 추가 — `public/og-image.png`(1200x630), `favicon.svg`, `layout.tsx` 메타데이터
